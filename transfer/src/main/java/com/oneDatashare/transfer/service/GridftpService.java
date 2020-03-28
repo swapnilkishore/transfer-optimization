@@ -25,12 +25,12 @@
 package com.oneDatashare.transfer.service;
 
 import org.onedatashare.module.globusapi.Result;
-import org.onedatashare.server.model.core.ODSConstants;
-import org.onedatashare.server.model.core.Stat;
-import org.onedatashare.server.model.credential.GlobusWebClientCredential;
-import org.onedatashare.server.model.useraction.UserAction;
-import org.onedatashare.server.module.gridftp.GridftpResource;
-import org.onedatashare.server.module.gridftp.GridftpSession;
+import com.oneDatashare.transfer.model.core.ODSConstants;
+import com.oneDatashare.transfer.model.core.Stat;
+import com.oneDatashare.transfer.model.credential.GlobusWebClientCredential;
+import com.oneDatashare.transfer.model.useraction.UserAction;
+import com.oneDatashare.transfer.module.gridftp.GridftpResource;
+import com.oneDatashare.transfer.module.gridftp.GridftpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

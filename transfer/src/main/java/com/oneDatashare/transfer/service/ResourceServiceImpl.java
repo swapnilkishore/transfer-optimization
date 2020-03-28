@@ -22,6 +22,12 @@ public class ResourceServiceImpl {
         processTransferFromJob(receivedJob);
     }
 
+
+    /**
+     * We need to change at lot in below function, Mainly the credential part as it will come from ashish.
+     * Thats why i have not imported related files for this class
+     * @param job
+     */
     public void processTransferFromJob(Job job) {
         Transfer<Resource, Resource> transfer = new Transfer<>();
         Disposable ongoingJob = getResourceWithUserActionResource(user.get(), job.getSrc())
