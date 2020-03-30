@@ -28,7 +28,7 @@ import lombok.Data;
 import org.oneDatashare.transfer.model.credential.UploadCredential;
 import org.springframework.data.annotation.Transient;
 
-import java.beans.Transient;
+//import java.beans.Transient;
 import java.util.ArrayList;
 
 @Data

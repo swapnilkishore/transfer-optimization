@@ -28,7 +28,7 @@ import org.oneDatashare.transfer.model.core.Credential;
 import org.oneDatashare.transfer.model.useraction.UserActionCredential;
 import org.springframework.data.annotation.Transient;
 
-import java.beans.Transient;
+//import java.beans.Transient;
 
 @Data
 public class UserInfoCredential extends Credential {

@@ -7,7 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import com.oneDatashare.transfer.model.core.*;
+import org.oneDatashare.transfer.model.core.*;
 import org.oneDatashare.transfer.model.core.Resource;
 import org.oneDatashare.transfer.model.core.Slice;
 import org.oneDatashare.transfer.model.core.Stat;

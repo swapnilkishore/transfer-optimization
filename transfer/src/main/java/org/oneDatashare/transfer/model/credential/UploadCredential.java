@@ -30,7 +30,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Mono;
 
-import java.beans.Transient;
+//import java.beans.Transient;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Data

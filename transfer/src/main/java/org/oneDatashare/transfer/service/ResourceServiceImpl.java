@@ -1,6 +1,6 @@
 package org.oneDatashare.transfer.service;
 
-import com.oneDatashare.transfer.model.core.*;
+import org.oneDatashare.transfer.model.core.*;
 
 import org.oneDatashare.transfer.model.core.*;
 import org.onedatashare.module.globusapi.GlobusClient;

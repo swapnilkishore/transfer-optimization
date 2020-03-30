@@ -23,7 +23,7 @@
 
 package org.oneDatashare.transfer.model.credential;
 
-import org.oneDatashare.module.globusapi.EndPoint;
+import org.onedatashare.module.globusapi.EndPoint;
 import org.onedatashare.module.globusapi.GlobusClient;
 import org.oneDatashare.transfer.model.core.Credential;
 

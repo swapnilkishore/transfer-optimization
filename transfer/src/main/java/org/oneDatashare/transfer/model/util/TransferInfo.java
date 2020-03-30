@@ -28,7 +28,6 @@ import lombok.NoArgsConstructor;
 import org.oneDatashare.transfer.model.core.ODSConstants;
 import org.springframework.data.annotation.Transient;
 
-import java.beans.Transient;
 
 /**
  * This is used to track the progress of a transfer in real time.
