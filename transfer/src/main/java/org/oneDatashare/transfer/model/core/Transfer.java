@@ -25,15 +25,15 @@ package org.oneDatashare.transfer.model.core;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.onedatashare.server.model.util.Progress;
-import org.onedatashare.server.model.util.Throughput;
-import org.onedatashare.server.model.util.Time;
-import org.onedatashare.server.model.util.TransferInfo;
-import org.onedatashare.server.module.box.BoxResource;
-import org.onedatashare.server.module.gridftp.GridftpResource;
-import org.onedatashare.server.module.gridftp.GridftpSession;
-import org.onedatashare.server.module.http.HttpResource;
-import org.onedatashare.server.service.ODSLoggerService;
+import org.oneDatashare.transfer.model.util.Progress;
+import org.oneDatashare.transfer.model.util.Throughput;
+import org.oneDatashare.transfer.model.util.Time;
+import org.oneDatashare.transfer.model.util.TransferInfo;
+import org.oneDatashare.transfer.module.box.BoxResource;
+import org.oneDatashare.transfer.module.gridftp.GridftpResource;
+import org.oneDatashare.transfer.module.gridftp.GridftpSession;
+import org.oneDatashare.transfer.module.http.HttpResource;
+import org.oneDatashare.transfer.service.ODSLoggerService;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
