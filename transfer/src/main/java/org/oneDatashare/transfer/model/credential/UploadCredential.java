@@ -24,12 +24,13 @@
 package org.oneDatashare.transfer.model.credential;
 
 import lombok.Data;
-import org.onedatashare.server.model.core.Credential;
-import org.onedatashare.server.model.core.Slice;
+import org.oneDatashare.transfer.model.core.Credential;
+import org.oneDatashare.transfer.model.core.Slice;
 import org.springframework.data.annotation.Transient;
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Mono;
 
+import java.beans.Transient;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Data

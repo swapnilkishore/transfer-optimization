@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.oneDatashare.transfer.model.request.*;
 import org.onedatashare.module.globusapi.EndPoint;
-import com.oneDatashare.transfer.model.request.*;
 
 import java.util.ArrayList;
 

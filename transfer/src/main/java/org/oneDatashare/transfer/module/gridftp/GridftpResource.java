@@ -5,7 +5,7 @@ import org.oneDatashare.transfer.model.core.*;
 import org.oneDatashare.transfer.model.core.Stat;
 import org.oneDatashare.transfer.service.GridftpService;
 import org.onedatashare.module.globusapi.*;
-import com.oneDatashare.transfer.model.core.*;
+import org.oneDatashare.transfer.model.core.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

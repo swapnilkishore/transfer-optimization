@@ -3,7 +3,7 @@ package org.oneDatashare.transfer.module.box;
 import com.box.sdk.*;
 import com.box.sdk.http.HttpMethod;
 import org.apache.commons.io.IOUtils;
-import com.oneDatashare.transfer.model.core.*;
+import org.oneDatashare.transfer.model.core.*;
 import org.oneDatashare.transfer.model.error.ODSAccessDeniedException;
 import org.oneDatashare.transfer.service.ODSLoggerService;
 import org.oneDatashare.transfer.model.core.*;
