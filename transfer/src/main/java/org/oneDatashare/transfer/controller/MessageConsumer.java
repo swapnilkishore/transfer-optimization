@@ -1,5 +1,6 @@
 package org.oneDatashare.transfer.controller;
 
+import org.oneDatashare.transfer.model.core.Job;
 import org.oneDatashare.transfer.service.ResourceServiceImpl;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
