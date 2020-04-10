@@ -13,21 +13,19 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/transfer")
-public class SubmitController {
+public class TransferController {
 
     @Autowired
     private TransferService resourceService;
 
     /**
      * Handler for POST requests of transfers
-     * @param headers - Incoming request headers
      * @param transferRequest - Request data with transfer information
      * @return Mono\<Job\>
      */
     @PostMapping
-    public Object submit(@RequestHeader HttpHeaders headers, @RequestBody TransferRequest transferRequest) {
-        String cookie = headers.getFirst(ODSConstants.COOKIE);
+    public Object submitTransferJob(@RequestBody TransferRequest transferRequest) {
         UserAction userAction = UserAction.convertToUserAction(transferRequest);
-        return resourceService.submit(cookie, userAction);
+        return resourceService.submit(userAction);
     }
 }

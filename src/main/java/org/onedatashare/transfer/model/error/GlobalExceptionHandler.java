@@ -9,18 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * */
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-    /**
-     * Exception handler for Invalid Login
-     * @param ilException : Invalid ODS Credential Exception Object
-     * */
-    @ExceptionHandler(InvalidODSCredentialsException.class)
-    public ResponseEntity<String> handle(InvalidODSCredentialsException ilException) {
-//        ODSLoggerService.logError(ilException.toString());
-        return new ResponseEntity<>(ilException.toString(), ilException.status);
-    }
-
-
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<String> handle(NotFoundException nfException){
 //        ODSLoggerService.logError(nfException.toString());

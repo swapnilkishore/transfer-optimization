@@ -9,18 +9,13 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 import java.util.*;
-
-import static org.onedatashare.transfer.model.core.ODSConstants.TOKEN_TIMEOUT_IN_MINUTES;
 
 /**
  * Service class for all operations related to users' information.
  */
 @Service
 public class UserService {
-
     @Autowired
     private UserRepository userRepository;
 
@@ -59,7 +54,7 @@ public class UserService {
 
 
     public OAuthCredential updateCredential(UserActionCredential userActionCredential, OAuthCredential credential) {
-//Updating the access token for googledrive using refresh token or deleting credential if refresh token is expired.
+        //Updating the access token for googledrive using refresh token or deleting credential if refresh token is expired.
         getLoggedInUser()
                 .doOnSuccess(user -> {
                     Map<UUID,Credential> credsTemporary = user.getCredentials();
@@ -78,25 +73,6 @@ public class UserService {
 
         return credential;
     }
-
-
-    public Map<UUID, Credential> removeIfExpired(Map<UUID, Credential> creds){
-        ArrayList<UUID> removingThese = new ArrayList<UUID>();
-        for(Map.Entry<UUID, Credential> entry : creds.entrySet()){
-            if(entry.getValue().type == Credential.CredentialType.GLOBUS &&
-                    ((OAuthCredential)entry.getValue()).name.equals("GridFTP Client") &&
-                    ((OAuthCredential)entry.getValue()).expiredTime != null &&
-                    Calendar.getInstance().getTime().after(((OAuthCredential)entry.getValue()).expiredTime))
-            {
-                removingThese.add(entry.getKey());
-            }
-        }
-        for(UUID id : removingThese){
-            creds.remove(id);
-        }
-        return creds;
-    }
-
 
     public Flux<UUID> getJobs() {
         return getLoggedInUser().map(User::getJobs).flux().flatMap(Flux::fromIterable);

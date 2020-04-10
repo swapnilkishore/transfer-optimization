@@ -148,23 +148,7 @@ public class TransferService {
         }
     }
 
-    public Mono<Stat> list(String cookie, UserAction userAction) {
-        return getResourceWithUserActionUri(cookie, userAction).flatMap(Resource::stat);
-    }
-
-    public Mono<Boolean> mkdir(String cookie, UserAction userAction) {
-        return getResourceWithUserActionUri(cookie, userAction)
-                .flatMap(Resource::mkdir)
-                .map(r -> true);
-    }
-
-    public Mono<Boolean> delete(String cookie, UserAction userAction) {
-        return getResourceWithUserActionUri(cookie, userAction)
-                .flatMap(Resource::delete)
-                .map(val -> true);
-    }
-
-    public Mono<Job> submit(String cookie, UserAction userAction) {
+    public Mono<Job> submit(UserAction userAction) {
         AtomicReference<User> u = new AtomicReference<>();
         return userService.getLoggedInUser()
                 .map(user -> {
@@ -206,14 +190,6 @@ public class TransferService {
                             .flatMap(jobService::saveJob)
                             .doOnSuccess(restartedJob -> processTransferFromJob(restartedJob, cookie));
                 });
-    }
-
-    public Mono<Job> deleteJob(String cookie, UserAction userAction) {
-        return jobService.findJobByJobId(cookie, userAction.getJob_id())
-                .map(job -> {
-                    job.setDeleted(true);
-                    return job;
-                }).flatMap(jobService::saveJob);
     }
 
     /**
