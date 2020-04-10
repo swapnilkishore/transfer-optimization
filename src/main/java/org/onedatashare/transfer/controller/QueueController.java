@@ -7,7 +7,7 @@ import org.onedatashare.transfer.model.jobaction.JobRequest;
 import org.onedatashare.transfer.model.request.JobRequestData;
 import org.onedatashare.transfer.model.useraction.UserAction;
 import org.onedatashare.transfer.service.JobService;
-import org.onedatashare.transfer.service.ResourceServiceImpl;
+import org.onedatashare.transfer.service.TransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +27,7 @@ public class QueueController {
     private JobService jobService;
 
     @Autowired
-    private ResourceServiceImpl resourceService;
+    private TransferService resourceService;
 
     /**
      * Handler for queue GET requests
@@ -65,5 +65,19 @@ public class QueueController {
             String cookie = headers.getFirst(ODSConstants.COOKIE);
             UserAction userAction = UserAction.convertToUserAction(jobRequestData);
             return resourceService.restartJob(cookie, userAction);
+    }
+
+    /**
+     * Handler that invokes the service to cancel an ongoing job.
+     *
+     * @param headers - Incoming request headers
+     * @param jobRequestData - Model containing the job ID of the transfer job to be stopped
+     * @return Object - Mono of job that was stopped
+     */
+    @PostMapping("/cancel")
+    public Object cancel(@RequestHeader HttpHeaders headers, @RequestBody JobRequestData jobRequestData) {
+        String cookie = headers.getFirst(ODSConstants.COOKIE);
+        UserAction userAction = UserAction.convertToUserAction(jobRequestData);
+        return resourceService.cancel(cookie, userAction);
     }
 }

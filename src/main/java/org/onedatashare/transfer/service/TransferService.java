@@ -3,6 +3,8 @@ package org.onedatashare.transfer.service;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.OAuthCredential;
 import org.onedatashare.transfer.model.credential.UserInfoCredential;
+import org.onedatashare.transfer.model.error.AuthenticationRequired;
+import org.onedatashare.transfer.model.error.NotFoundException;
 import org.onedatashare.transfer.model.error.TokenExpiredException;
 import org.onedatashare.transfer.model.useraction.IdMap;
 import org.onedatashare.transfer.model.useraction.UserAction;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.UnsupportedEncodingException;
@@ -29,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.onedatashare.transfer.model.core.ODSConstants.*;
 
 @Service
-public class ResourceServiceImpl extends ResourceService {
+public class TransferService {
     @Autowired
     private UserService userService;
 
@@ -38,13 +41,25 @@ public class ResourceServiceImpl extends ResourceService {
 
     private HashMap<UUID, Disposable> ongoingJobs = new HashMap<>();
 
+    private void fetchCredentialsFromUserAction(User usr, SynchronousSink sink, UserAction userAction){
+        if(userAction.getCredential() == null || userAction.getCredential().getUuid() == null) {
+            sink.error(new AuthenticationRequired("oauth"));
+        }
+        Map credMap = usr.getCredentials();
+        Credential credential = (Credential) credMap.get(UUID.fromString(userAction.getCredential().getUuid()));
+        if(credential == null){
+            sink.error(new NotFoundException("Credentials for the given UUID not found"));
+        }
+        sink.next(credential);
+    }
+
     public Mono<? extends Resource> getResourceWithUserActionUri(String cookie, UserAction userAction) {
         final String path = pathFromUri(userAction.getUri());
         String id = userAction.getId();
         ArrayList<IdMap> idMap = userAction.getMap();
 
         if (userAction.getCredential().isTokenSaved()) {
-            return userService.getLoggedInUser(cookie)
+            return userService.getLoggedInUser()
                     .handle((usr, sink) -> {
                         this.fetchCredentialsFromUserAction(usr, sink, userAction);
                     })
@@ -88,7 +103,7 @@ public class ResourceServiceImpl extends ResourceService {
         final String path = pathFromUri(userActionResource.getUri());
         String id = userActionResource.getId();
         ArrayList<IdMap> idMap = userActionResource.getMap();
-        return userService.getLoggedInUser(cookie)
+        return userService.getLoggedInUser()
                 .flatMap(user -> createCredential(userActionResource, user))
                 .map(credential -> createSession(userActionResource.getUri(), credential))
                 .flatMap(session -> {
@@ -172,7 +187,7 @@ public class ResourceServiceImpl extends ResourceService {
 
     public Mono<Job> submit(String cookie, UserAction userAction) {
         AtomicReference<User> u = new AtomicReference<>();
-        return userService.getLoggedInUser(cookie)
+        return userService.getLoggedInUser()
                 .map(user -> {
                     Job job = new Job(userAction.getSrc(), userAction.getDest());
                     job.setStatus(JobStatus.scheduled);
@@ -193,7 +208,7 @@ public class ResourceServiceImpl extends ResourceService {
     }
 
     public Mono<Job> restartJob(String cookie, UserAction userAction) {
-        return userService.getLoggedInUser(cookie)
+        return userService.getLoggedInUser()
                 .flatMap(user -> {
                     return jobService.findJobByJobId(cookie, userAction.getJob_id())
                             .flatMap(job -> {
@@ -233,7 +248,7 @@ public class ResourceServiceImpl extends ResourceService {
      * @return Mono of job that was stopped
      */
     public Mono<Job> cancel(String cookie, UserAction userAction) {
-        return userService.getLoggedInUser(cookie)
+        return userService.getLoggedInUser()
                 .flatMap((User user) -> jobService.findJobByJobId(cookie, userAction.getJob_id())
                         .map(job -> {
                             try {
