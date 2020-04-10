@@ -16,35 +16,12 @@ public class ODSConstants {
     public static final String GRIDFTP_URI_SCHEME = "gsiftp://";
     public static final String HTTP_URI_SCHEME = "http://";
     public static final String HTTPS_URI_SCHEME = "https://";
-
     public static final String DROPBOX_CLIENT_IDENTIFIER = "OneDataShare-DIDCLab";
     public static final String UPLOAD_IDENTIFIER = "Upload";
 
     public static final String COOKIE = "cookie";
     public static final String TOKEN_COOKIE_NAME = "ATOKEN";
 
-    public static final String[] ODS_URIS_ARR = new String[]{"/", "/transfer", "/terms", "/policy", "/user", "/queue",
-            "/clientsInfo", "/history", "/account", "/account/signIn", "/account/register", "/oauth",
-            "/support", "/get-started", "/oauth/uuid",
-            "/oauth/googledrive", "/oauth/dropbox", "/oauth/gridftp", "/oauth/box",
-            "/oauth/ExistingCredDropbox" ,"/oauth/ExistingCredGoogleDrive", "/oauth/ExistingCredBox"};
-
-    public static final Set<String> ODS_URIS_SET = new HashSet<String>(Arrays.asList(ODS_URIS_ARR));
-
-    public static final String AUTH_ENDPOINT = "/authenticate";
-    public static final String LOGOUT_ENDPOINT = "/deauthenticate";
-    public static final String RESET_PASSWD_ENDPOINT = "/reset-password";
-    public static final String UPDATE_PASSWD_ENDPOINT = "/api/stork/update-password";
-    public static final String IS_REGISTERED_EMAIL_ENDPOINT = "/is-email-registered";
-    public static final String SEND_PASSWD_RST_CODE_ENDPOINT = "/send-passwd-rst-code";
-
-    public static final String REGISTRATION_ENDPOINT = "/register";
-    public static final String EMAIL_VERIFICATION_ENDPOINT = "/verify-email";
-    public static final String RESEND_ACC_ACT_CODE_ENDPOINT = "/resend-acc-act-code";
-
-    public static final String[] OPEN_ENDPOINTS = new String[]{
-            AUTH_ENDPOINT, RESET_PASSWD_ENDPOINT, REGISTRATION_ENDPOINT, EMAIL_VERIFICATION_ENDPOINT, RESEND_ACC_ACT_CODE_ENDPOINT
-    };
 
     public static final int TOKEN_TIMEOUT_IN_MINUTES = 3;
 

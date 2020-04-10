@@ -58,7 +58,7 @@ public class UserService {
     }
 
 
-    public OAuthCredential updateCredential(String cookie, UserActionCredential userActionCredential, OAuthCredential credential) {
+    public OAuthCredential updateCredential(UserActionCredential userActionCredential, OAuthCredential credential) {
 //Updating the access token for googledrive using refresh token or deleting credential if refresh token is expired.
         getLoggedInUser()
                 .doOnSuccess(user -> {
@@ -98,7 +98,7 @@ public class UserService {
     }
 
 
-    public Flux<UUID> getJobs(String cookie) {
+    public Flux<UUID> getJobs() {
         return getLoggedInUser().map(User::getJobs).flux().flatMap(Flux::fromIterable);
     }
 }

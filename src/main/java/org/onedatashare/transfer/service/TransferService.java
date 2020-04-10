@@ -58,7 +58,6 @@ public class TransferService {
         String id = userAction.getId();
         ArrayList<IdMap> idMap = userAction.getMap();
 
-        if (userAction.getCredential().isTokenSaved()) {
             return userService.getLoggedInUser()
                     .handle((usr, sink) -> {
                         this.fetchCredentialsFromUserAction(usr, sink, userAction);
@@ -67,17 +66,11 @@ public class TransferService {
                     .flatMap(GoogleDriveSession::initialize)
                     .flatMap(driveSession -> driveSession.select(path, id, idMap))
                     .onErrorResume(throwable -> throwable instanceof TokenExpiredException, throwable ->
-                            Mono.just(userService.updateCredential(cookie, userAction.getCredential(), ((TokenExpiredException) throwable).cred))
+                            Mono.just(userService.updateCredential(userAction.getCredential(), ((TokenExpiredException) throwable).cred))
                                     .map(credential -> new GoogleDriveSession(URI.create(userAction.getUri()), credential))
                                     .flatMap(GoogleDriveSession::initialize)
                                     .flatMap(driveSession -> driveSession.select(path, id, idMap))
                     );
-        } else {
-            return Mono.just(new OAuthCredential(userAction.getCredential().getToken()))
-                    .map(oAuthCred -> new GoogleDriveSession(URI.create(userAction.getUri()), oAuthCred))
-                    .flatMap(GoogleDriveSession::initializeNotSaved)
-                    .flatMap(driveSession -> driveSession.select(path, id, idMap));
-        }
     }
 
     public Mono<Resource> getResourceWithUserActionResource(User userObj, UserActionResource userActionResource) {
@@ -87,14 +80,7 @@ public class TransferService {
         return Mono.just(userObj)
                 .flatMap(user -> createCredential(userActionResource, user))
                 .map(credential -> createSession(userActionResource.getUri(), credential))
-                .flatMap(session -> {
-                    if (session instanceof GoogleDriveSession && !userActionResource.getCredential().isTokenSaved())
-                        return ((GoogleDriveSession) session).initializeNotSaved();
-                    if (session instanceof BoxSession && !userActionResource.getCredential().isTokenSaved())
-                        return ((BoxSession) session).initializeNotSaved();
-                    else
-                        return session.initialize();
-                })
+                .flatMap(session -> session.initialize())
                 .flatMap(session -> ((Session) session).select(path, id, idMap));
     }
 
@@ -106,14 +92,7 @@ public class TransferService {
         return userService.getLoggedInUser()
                 .flatMap(user -> createCredential(userActionResource, user))
                 .map(credential -> createSession(userActionResource.getUri(), credential))
-                .flatMap(session -> {
-                    if (session instanceof GoogleDriveSession && !userActionResource.getCredential().isTokenSaved())
-                        return ((GoogleDriveSession) session).initializeNotSaved();
-                    if (session instanceof BoxSession && !userActionResource.getCredential().isTokenSaved())
-                        return ((BoxSession) session).initializeNotSaved();
-                    else
-                        return session.initialize();
-                })
+                .flatMap(session ->  session.initialize())
                 .flatMap(session -> ((Session) session).select(path, id, idMap));
     }
 

@@ -1,6 +1,8 @@
 package org.onedatashare.transfer.service;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -24,6 +26,8 @@ public class ODSSecurityConfigRepository implements ServerSecurityContextReposit
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    private static final Logger logger = LoggerFactory.getLogger(ODSSecurityConfigRepository.class);
 
     @Override
     public Mono<Void> save(ServerWebExchange serverWebExchange, SecurityContext securityContext) {
@@ -49,7 +53,7 @@ public class ODSSecurityConfigRepository implements ServerSecurityContextReposit
                     token = request.getCookies().getFirst(TOKEN_COOKIE_NAME).getValue();
                 }
             } catch (NullPointerException npe) {
-//                ODSLoggerService.logError("No token Found for request at " + endpoint);
+                logger.error("No token Found for request at " + endpoint);
             }
         }
         return token;
@@ -66,7 +70,7 @@ public class ODSSecurityConfigRepository implements ServerSecurityContextReposit
             }
         }
         catch(ExpiredJwtException e){
-//            ODSLoggerService.logError("Token Expired");
+            logger.error("Token Expired");
         }
         return Mono.empty();
     }

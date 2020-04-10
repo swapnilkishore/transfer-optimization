@@ -43,26 +43,7 @@ public class JWTUtil implements Serializable {
         return expiration.before(new Date());
     }
 
-    public String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRoles());
-        return generateToken(claims, user.getEmail());
-    }
-
-    private String generateToken(Map<String, Object> claims, String username) {
-        final Date createdDate = new Date();
-        final Date expirationDate = new Date(createdDate.getTime() + expirationTime * 1000);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(createdDate)
-                .setExpiration(expirationDate)
-                .signWith(SignatureAlgorithm.HS512, Base64.getEncoder().encodeToString(secret.getBytes()))
-                .compact();
-    }
-
     public Boolean validateToken(String token) {
         return !isTokenExpired(token);
     }
-
 }

@@ -1,7 +1,8 @@
 package org.onedatashare.transfer.model.drain;
 
 import org.onedatashare.transfer.model.core.Slice;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -16,6 +17,8 @@ public class GoogleDriveDrain implements Drain {
 
     String drainPath;// = getPath();
     Boolean isDirTransfer = false;
+
+    Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
 
     @Override
     public GoogleDriveDrain start(String drainPath) {
@@ -94,11 +97,11 @@ public class GoogleDriveDrain implements Drain {
                     temp.write(chunk.toByteArray(), sizeUploading, (chunk.size() - sizeUploading));
                     chunk = temp;
                 } else if (request.getResponseCode() == 200 || request.getResponseCode() == 201) {
-//                        ODSLoggerService.logDebug("code: " + request.getResponseCode() +
-//                                ", message: " + request.getResponseMessage());
+                        logger.debug("code: " + request.getResponseCode() +
+                                ", message: " + request.getResponseMessage());
                 } else {
-//                        ODSLoggerService.logDebug("code: " + request.getResponseCode() +
-//                                ", message: " + request.getResponseMessage());
+                        logger.debug("code: " + request.getResponseCode() +
+                                ", message: " + request.getResponseMessage());
                 }
             }
         }catch (Exception e) {
