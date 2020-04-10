@@ -7,6 +7,7 @@ import org.onedatashare.transfer.service.TransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 /**
  * Contoller for handling file/folder transfer requests
@@ -24,8 +25,8 @@ public class TransferController {
      * @return Mono\<Job\>
      */
     @PostMapping
-    public Object submitTransferJob(@RequestBody TransferRequest transferRequest) {
+    public Mono<Void> start(@RequestBody TransferRequest transferRequest) {
         UserAction userAction = UserAction.convertToUserAction(transferRequest);
-        return resourceService.submit(userAction);
+        return resourceService.submit(userAction).then();
     }
 }

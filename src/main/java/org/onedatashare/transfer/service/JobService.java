@@ -50,15 +50,6 @@ public class JobService {
         });
     }
 
-    public Mono<JobDetails> getJobForAdmin(JobRequest request){
-        Pageable pageable = this.generatePageFromRequest(request);
-        return userService.getLoggedInUserEmail().flatMap(userEmail -> {
-            Mono<List<Job>> jobList = jobRepository.findAllBy(pageable).collectList();
-            Mono<Long> jobCount = jobRepository.getCount();
-            return jobList.zipWith(jobCount, JobDetails::new);
-        });
-    }
-
     public Mono<List<Job>> getUpdatesForUser(List<UUID> jobIds){
         return userService.getLoggedInUserEmail()
                 .flatMap(userEmail ->
@@ -66,10 +57,6 @@ public class JobService {
                                 .filter(job -> !job.isDeleted() && job.getOwner().equals(userEmail))
                                 .collectList()
                 );
-    }
-
-    public  Flux<Job> getUpdatesForAdmin(List<UUID> jobIds){
-        return jobRepository.findAllById(jobIds);
     }
 
     public Mono<Job> findJobByJobId(String cookie, Integer job_id) {

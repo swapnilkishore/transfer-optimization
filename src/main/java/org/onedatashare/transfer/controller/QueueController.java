@@ -47,26 +47,6 @@ public class QueueController {
         return jobService.getUpdatesForUser(jobIds);
     }
 
-    @DeleteMapping
-    //TODO: remove body
-    public Mono<Job> deleteJob(@RequestHeader HttpHeaders headers, @RequestBody JobRequestData jobRequestData){
-        String cookie = headers.getFirst(ODSConstants.COOKIE);
-        UserAction userAction = UserAction.convertToUserAction(jobRequestData);
-        return jobService.findJobByJobId(cookie, userAction.getJob_id())
-                .map(job -> {
-                    job.setDeleted(true);
-                    return job;
-                }).flatMap(jobService::saveJob);
-    }
-
-
-    @PostMapping("/restart")
-    public Mono<Job> restartJob(@RequestHeader HttpHeaders headers, @RequestBody JobRequestData jobRequestData){
-            String cookie = headers.getFirst(ODSConstants.COOKIE);
-            UserAction userAction = UserAction.convertToUserAction(jobRequestData);
-            return resourceService.restartJob(cookie, userAction);
-    }
-
     /**
      * Handler that invokes the service to cancel an ongoing job.
      *

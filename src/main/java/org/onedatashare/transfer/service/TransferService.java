@@ -3,9 +3,6 @@ package org.onedatashare.transfer.service;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.OAuthCredential;
 import org.onedatashare.transfer.model.credential.UserInfoCredential;
-import org.onedatashare.transfer.model.error.AuthenticationRequired;
-import org.onedatashare.transfer.model.error.NotFoundException;
-import org.onedatashare.transfer.model.error.TokenExpiredException;
 import org.onedatashare.transfer.model.useraction.IdMap;
 import org.onedatashare.transfer.model.useraction.UserAction;
 import org.onedatashare.transfer.model.useraction.UserActionResource;
@@ -18,15 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.onedatashare.transfer.model.core.ODSConstants.*;
@@ -39,39 +34,7 @@ public class TransferService {
     @Autowired
     private JobService jobService;
 
-    private HashMap<UUID, Disposable> ongoingJobs = new HashMap<>();
-
-    private void fetchCredentialsFromUserAction(User usr, SynchronousSink sink, UserAction userAction){
-        if(userAction.getCredential() == null || userAction.getCredential().getUuid() == null) {
-            sink.error(new AuthenticationRequired("oauth"));
-        }
-        Map credMap = usr.getCredentials();
-        Credential credential = (Credential) credMap.get(UUID.fromString(userAction.getCredential().getUuid()));
-        if(credential == null){
-            sink.error(new NotFoundException("Credentials for the given UUID not found"));
-        }
-        sink.next(credential);
-    }
-
-    public Mono<? extends Resource> getResourceWithUserActionUri(String cookie, UserAction userAction) {
-        final String path = pathFromUri(userAction.getUri());
-        String id = userAction.getId();
-        ArrayList<IdMap> idMap = userAction.getMap();
-
-            return userService.getLoggedInUser()
-                    .handle((usr, sink) -> {
-                        this.fetchCredentialsFromUserAction(usr, sink, userAction);
-                    })
-                    .map(credential -> new GoogleDriveSession(URI.create(userAction.getUri()), (Credential) credential))
-                    .flatMap(GoogleDriveSession::initialize)
-                    .flatMap(driveSession -> driveSession.select(path, id, idMap))
-                    .onErrorResume(throwable -> throwable instanceof TokenExpiredException, throwable ->
-                            Mono.just(userService.updateCredential(userAction.getCredential(), ((TokenExpiredException) throwable).cred))
-                                    .map(credential -> new GoogleDriveSession(URI.create(userAction.getUri()), credential))
-                                    .flatMap(GoogleDriveSession::initialize)
-                                    .flatMap(driveSession -> driveSession.select(path, id, idMap))
-                    );
-    }
+    private ConcurrentHashMap<UUID, Disposable> ongoingJobs = new ConcurrentHashMap<>();
 
     public Mono<Resource> getResourceWithUserActionResource(User userObj, UserActionResource userActionResource) {
         final String path = pathFromUri(userActionResource.getUri());
@@ -81,18 +44,6 @@ public class TransferService {
                 .flatMap(user -> createCredential(userActionResource, user))
                 .map(credential -> createSession(userActionResource.getUri(), credential))
                 .flatMap(session -> session.initialize())
-                .flatMap(session -> ((Session) session).select(path, id, idMap));
-    }
-
-
-    public Mono<Resource> getResourceWithUserActionResource(String cookie, UserActionResource userActionResource) {
-        final String path = pathFromUri(userActionResource.getUri());
-        String id = userActionResource.getId();
-        ArrayList<IdMap> idMap = userActionResource.getMap();
-        return userService.getLoggedInUser()
-                .flatMap(user -> createCredential(userActionResource, user))
-                .map(credential -> createSession(userActionResource.getUri(), credential))
-                .flatMap(session ->  session.initialize())
                 .flatMap(session -> ((Session) session).select(path, id, idMap));
     }
 
@@ -164,34 +115,6 @@ public class TransferService {
                 .subscribeOn(Schedulers.elastic());
     }
 
-    //@Override
-    public Mono<String> download(String cookie, UserAction userAction) {
-        return getResourceWithUserActionUri(cookie, userAction)
-                .flatMap(Resource::download);
-    }
-
-    public Mono<Job> restartJob(String cookie, UserAction userAction) {
-        return userService.getLoggedInUser()
-                .flatMap(user -> {
-                    return jobService.findJobByJobId(cookie, userAction.getJob_id())
-                            .flatMap(job -> {
-                                Job restartedJob = new Job(job.getSrc(), job.getDest());
-                                boolean credsExists = updateJobCredentials(user, job);
-                                if (!credsExists) {
-                                    return Mono.error(new Exception("Restart job failed since either or both credentials of the job do not exist"));
-                                }
-                                restartedJob.setStatus(JobStatus.scheduled);
-                                restartedJob.setRestartedJob(true);
-                                restartedJob.setSourceJob(userAction.getJob_id());
-                                restartedJob = user.saveJob(restartedJob);
-                                userService.saveUser(user).subscribe();
-                                return Mono.just(restartedJob);
-                            })
-                            .flatMap(jobService::saveJob)
-                            .doOnSuccess(restartedJob -> processTransferFromJob(restartedJob, cookie));
-                });
-    }
-
     /**
      * This method cancel an ongoing transfer.
      * User email and job id passed in the request is used to obtain the job UUID,
@@ -217,75 +140,11 @@ public class TransferService {
                 .flatMap(jobService::saveJob);
     }
 
-    public boolean updateJobCredentials(User user, Job restartedJob) {
-        boolean credsExist = true;
-        if (restartedJob.getSrc().getCredential() != null) {
-            UUID srcCredUUID = getCredUuidUsingCredName(user, restartedJob.getSrc().getCredential().getName());
-            if (srcCredUUID != null) {
-                if (!UUID.fromString(restartedJob.getSrc().getCredential().getUuid()).equals(srcCredUUID)) {
-                    restartedJob.getSrc().getCredential().setUuid(srcCredUUID.toString());
-                }
-            } else
-                credsExist = false;
-        }
-
-        if (!credsExist)
-            return credsExist;    // don't want to check for dest cred if src cred doesn't exist
-
-        if (restartedJob.getDest().getCredential() != null) {
-            UUID destCredUUID = getCredUuidUsingCredName(user, restartedJob.getDest().getCredential().getName());
-            if (destCredUUID != null) {
-                if (!UUID.fromString(restartedJob.getDest().getCredential().getUuid()).equals(destCredUUID)) {
-                    restartedJob.getDest().getCredential().setUuid(destCredUUID.toString());
-                }
-            } else
-                credsExist = false;
-        }
-
-        return credsExist;
-    }
-
-    public UUID getCredUuidUsingCredName(User user, String credName) {
-        for (Map.Entry<UUID, Credential> userCredEntry : user.getCredentials().entrySet()) {
-            if (userCredEntry.getValue() instanceof OAuthCredential) {
-                OAuthCredential cred = (OAuthCredential) userCredEntry.getValue();
-                if (cred.getName().equals(credName)) {
-                    return userCredEntry.getKey();
-                }
-            }
-        }
-        return null;
-    }
-
     public void processTransferFromJob(Job job, AtomicReference<User> user) {
         Transfer<Resource, Resource> transfer = new Transfer<>();
         Disposable ongoingJob = getResourceWithUserActionResource(user.get(), job.getSrc())
                 .map(transfer::setSource)
                 .flatMap(t -> getResourceWithUserActionResource(user.get(), job.getDest()))
-                .map(transfer::setDestination)
-                .flux()
-                .flatMap(transfer1 -> {
-                    return transfer1.start(TRANSFER_SLICE_SIZE);
-                })
-                .doOnSubscribe(s -> job.setStatus(JobStatus.transferring))
-                .doOnCancel(new RunnableCanceler(job))
-                .doFinally(s -> {
-                    if (job.getStatus() != JobStatus.cancelled && job.getStatus() != JobStatus.failed)
-                        job.setStatus(JobStatus.complete);
-                    jobService.saveJob(job).subscribe();
-                    ongoingJobs.remove(job.getUuid());
-                })
-                .map(job::updateJobWithTransferInfo)
-                .flatMap(jobService::saveJob)
-                .subscribe();
-        ongoingJobs.put(job.getUuid(), ongoingJob);
-    }
-
-    public void processTransferFromJob(Job job, final String cookie) {
-        Transfer<Resource, Resource> transfer = new Transfer<>();
-        Disposable ongoingJob = getResourceWithUserActionResource(cookie, job.getSrc())
-                .map(transfer::setSource)
-                .flatMap(t -> getResourceWithUserActionResource(cookie, job.getDest()))
                 .map(transfer::setDestination)
                 .flux()
                 .flatMap(transfer1 -> transfer1.start(TRANSFER_SLICE_SIZE))
