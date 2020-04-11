@@ -1,8 +1,9 @@
 package org.onedatashare.transfer.service;
 
 import org.onedatashare.transfer.model.core.*;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
-import org.onedatashare.transfer.model.credential.UserInfoCredential;
+import org.onedatashare.transfer.model.credentialold.OAuthCredentialOld;
+import org.onedatashare.transfer.model.credentialold.UserInfoCredentialOld;
+import org.onedatashare.transfer.model.request.TransferJobRequest;
 import org.onedatashare.transfer.model.useraction.IdMap;
 import org.onedatashare.transfer.model.useraction.UserAction;
 import org.onedatashare.transfer.model.useraction.UserActionResource;
@@ -12,6 +13,7 @@ import org.onedatashare.transfer.module.googledrive.GoogleDriveSession;
 import org.onedatashare.transfer.module.http.HttpSession;
 import org.onedatashare.transfer.module.vfs.VfsSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
@@ -33,6 +35,9 @@ public class TransferService {
 
     @Autowired
     private JobService jobService;
+
+    @Autowired
+    private CredentialService credentialService;
 
     private ConcurrentHashMap<UUID, Disposable> ongoingJobs = new ConcurrentHashMap<>();
 
@@ -64,7 +69,7 @@ public class TransferService {
         return path;
     }
 
-    public Mono<Credential> createCredential(UserActionResource userActionResource, User user) {
+    public Mono<CredentialOld> createCredential(UserActionResource userActionResource, User user) {
         if (userActionResource.getUri().startsWith(DROPBOX_URI_SCHEME) ||
                 userActionResource.getUri().startsWith(DRIVE_URI_SCHEME) || userActionResource.getUri().startsWith(BOX_URI_SCHEME)) {
             if (user.isSaveOAuthTokens()) {
@@ -75,28 +80,42 @@ public class TransferService {
                         ));
             }
             else {
-                return Mono.just( new OAuthCredential(userActionResource.getCredential().getToken()));
+                return Mono.just( new OAuthCredentialOld(userActionResource.getCredential().getToken()));
             }
         }
         else
-            return Mono.just(new UserInfoCredential(userActionResource.getCredential()));
+            return Mono.just(new UserInfoCredentialOld(userActionResource.getCredential()));
     }
 
 
-    public Session createSession(String uri, Credential credential) {
+    public Session createSession(String uri, CredentialOld credentialOld) {
         if (uri.startsWith(DROPBOX_URI_SCHEME)) {
-            return new DbxSession(URI.create(uri), credential);
+            return new DbxSession(URI.create(uri), credentialOld);
         } else if (uri.startsWith(DRIVE_URI_SCHEME))
-            return new GoogleDriveSession(URI.create(uri), credential);
+            return new GoogleDriveSession(URI.create(uri), credentialOld);
         else if(uri.startsWith(ODSConstants.BOX_URI_SCHEME)) {
-            return new BoxSession(URI.create(uri), credential);
+            return new BoxSession(URI.create(uri), credentialOld);
         }
         else if (uri.startsWith(HTTPS_URI_SCHEME) || uri.startsWith(HTTP_URI_SCHEME)) {
             return new HttpSession(URI.create(uri));
         }
         else {
-            return new VfsSession(URI.create(uri), credential);
+            return new VfsSession(URI.create(uri), credentialOld);
         }
+    }
+
+    private Mono<String> getUserCredFromRequest(){
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> (String) securityContext.getAuthentication().getCredentials());
+    }
+
+    public Mono<Void> submit(TransferJobRequest request){
+        TransferJob job = new TransferJob(request.getSource(), request.getDestination());
+//        return getUserCredFromRequest()
+//                .map(authToken ->
+////                        credentialService.fetchCredential(authToken, request.getSource().getType(), request.getSource().getIdList()))
+//                .map()
+        return null;
     }
 
     public Mono<Job> submit(UserAction userAction) {

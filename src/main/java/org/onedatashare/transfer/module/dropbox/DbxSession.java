@@ -2,9 +2,9 @@ package org.onedatashare.transfer.module.dropbox;
 
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
-import org.onedatashare.transfer.model.core.Credential;
+import org.onedatashare.transfer.model.core.CredentialOld;
 import org.onedatashare.transfer.model.core.Session;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
+import org.onedatashare.transfer.model.credentialold.OAuthCredentialOld;
 import org.onedatashare.transfer.model.error.AuthenticationRequired;
 import org.onedatashare.transfer.model.useraction.IdMap;
 import reactor.core.publisher.Mono;
@@ -21,7 +21,7 @@ public class DbxSession extends Session<DbxSession, DbxResource> {
     return client;
   }
 
-  public DbxSession(URI uri, Credential cred) {
+  public DbxSession(URI uri, CredentialOld cred) {
     super(uri, cred);
   }
 
@@ -42,8 +42,8 @@ public class DbxSession extends Session<DbxSession, DbxResource> {
   @Override
   public Mono<DbxSession> initialize() {
     return Mono.create(s -> {
-      if(getCredential() instanceof OAuthCredential){
-        OAuthCredential oauth = (OAuthCredential) getCredential();
+      if(getCredentialOld() instanceof OAuthCredentialOld){
+        OAuthCredentialOld oauth = (OAuthCredentialOld) getCredentialOld();
         DbxRequestConfig config =
                 DbxRequestConfig.newBuilder(DROPBOX_CLIENT_IDENTIFIER).build();
         client = new DbxClientV2(config, oauth.token);

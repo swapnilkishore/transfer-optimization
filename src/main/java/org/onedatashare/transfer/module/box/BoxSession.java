@@ -2,9 +2,9 @@ package org.onedatashare.transfer.module.box;
 
 import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxAPIResponseException;
-import org.onedatashare.transfer.model.core.Credential;
+import org.onedatashare.transfer.model.core.CredentialOld;
 import org.onedatashare.transfer.model.core.Session;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
+import org.onedatashare.transfer.model.credentialold.OAuthCredentialOld;
 import org.onedatashare.transfer.model.error.AuthenticationRequired;
 import org.onedatashare.transfer.model.error.TokenExpiredException;
 import org.onedatashare.transfer.model.useraction.IdMap;
@@ -19,8 +19,8 @@ public class BoxSession extends Session<BoxSession, BoxResource> {
     BoxAPIConnection client;
     private transient HashMap<String, String> pathToParentIdMap = new HashMap<>();
     protected ArrayList<IdMap> idMap = null;
-    public BoxSession(URI uri, Credential credential) {
-        super(uri, credential);
+    public BoxSession(URI uri, CredentialOld credentialOld) {
+        super(uri, credentialOld);
     }
 
     @Override
@@ -51,9 +51,9 @@ public class BoxSession extends Session<BoxSession, BoxResource> {
      */
     public Mono<BoxSession> initializeNotSaved() {
         return Mono.create(s -> {
-            if (getCredential() instanceof OAuthCredential) {
+            if (getCredentialOld() instanceof OAuthCredentialOld) {
                 try {
-                    client = new BoxAPIConnection(((OAuthCredential) getCredential()).getToken());
+                    client = new BoxAPIConnection(((OAuthCredentialOld) getCredentialOld()).getToken());
                 } catch (Throwable t) {
                     s.error(t);
                 }
@@ -71,8 +71,8 @@ public class BoxSession extends Session<BoxSession, BoxResource> {
     @Override
     public Mono<BoxSession> initialize() {
         return Mono.create(s -> {
-            if(getCredential() instanceof OAuthCredential){
-                OAuthCredential oauth = (OAuthCredential) getCredential();
+            if(getCredentialOld() instanceof OAuthCredentialOld){
+                OAuthCredentialOld oauth = (OAuthCredentialOld) getCredentialOld();
                 try{
                     //String client_id = System.getenv("BOX_CLIENT_ID");
                     //String client_secret = System.getenv("BOX_CLIENT_SECRET");

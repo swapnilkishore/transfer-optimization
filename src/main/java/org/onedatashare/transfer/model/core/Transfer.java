@@ -27,11 +27,6 @@ public class Transfer<S extends Resource, D extends Resource> {
     protected Progress progress = new Progress();
     protected Throughput throughput = new Throughput();
 
-    public Transfer(S source, D destination) {
-        this.source = source;
-        this.destination = destination;
-    }
-
     public Flux<TransferInfo> start(Long sliceSize) {
         // HTTP is read only
         if(destination instanceof HttpResource)

@@ -10,9 +10,9 @@ import com.google.api.services.drive.Drive;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.onedatashare.transfer.model.core.Credential;
+import org.onedatashare.transfer.model.core.CredentialOld;
 import org.onedatashare.transfer.model.core.Session;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
+import org.onedatashare.transfer.model.credentialold.OAuthCredentialOld;
 import org.onedatashare.transfer.model.error.AuthenticationRequired;
 import org.onedatashare.transfer.model.error.TokenExpiredException;
 import org.onedatashare.transfer.model.useraction.IdMap;
@@ -38,8 +38,8 @@ public class GoogleDriveSession extends Session<GoogleDriveSession, GoogleDriveR
     public GoogleDriveSession() {
     }
 
-    public GoogleDriveSession(URI uri, Credential credential) {
-        super(uri, credential);
+    public GoogleDriveSession(URI uri, CredentialOld credentialOld) {
+        super(uri, credentialOld);
     }
 
     @Override
@@ -63,9 +63,9 @@ public class GoogleDriveSession extends Session<GoogleDriveSession, GoogleDriveR
      */
     public Mono<GoogleDriveSession> initializeNotSaved() {
         return Mono.create(s -> {
-            if (getCredential() instanceof OAuthCredential) {
+            if (getCredentialOld() instanceof OAuthCredentialOld) {
                 try {
-                    service = getDriveService(((OAuthCredential) getCredential()).token);
+                    service = getDriveService(((OAuthCredentialOld) getCredentialOld()).token);
                 } catch (Throwable t) {
                     s.error(t);
                 }
@@ -83,18 +83,18 @@ public class GoogleDriveSession extends Session<GoogleDriveSession, GoogleDriveR
     @Override
     public Mono<GoogleDriveSession> initialize() {
         return Mono.create(s -> {
-            if (getCredential() instanceof OAuthCredential) {
+            if (getCredentialOld() instanceof OAuthCredentialOld) {
                 try {
-                    service = getDriveService(((OAuthCredential) getCredential()).token);
+                    service = getDriveService(((OAuthCredentialOld) getCredentialOld()).token);
                 } catch (Throwable t) {
                     s.error(t);
                 }
                 Date currentTime = new Date();
-                if (service != null && ((OAuthCredential) getCredential()).expiredTime != null &&
-                        currentTime.before(((OAuthCredential) getCredential()).expiredTime))
+                if (service != null && ((OAuthCredentialOld) getCredentialOld()).expiredTime != null &&
+                        currentTime.before(((OAuthCredentialOld) getCredentialOld()).expiredTime))
                     s.success(this);
                 else {
-                    OAuthCredential newCredential = updateToken();
+                    OAuthCredentialOld newCredential = updateToken();
                     if (newCredential.refreshToken != null)
                         s.error(new TokenExpiredException(newCredential, "Token has expired"));
                 }
@@ -135,9 +135,9 @@ public class GoogleDriveSession extends Session<GoogleDriveSession, GoogleDriveR
                 .build();
     }
 
-    public OAuthCredential updateToken() {
+    public OAuthCredentialOld updateToken() {
         // Updating the access token for googledrive using refresh token
-        OAuthCredential cred = (OAuthCredential) getCredential();
+        OAuthCredentialOld cred = (OAuthCredentialOld) getCredentialOld();
         try {
             //GoogleCredential refreshTokenCredential = new GoogleCredential.Builder().setJsonFactory(JSON_FACTORY).setTransport(HTTP_TRANSPORT).setClientSecrets(c.client_id, c.client_secret).build().setRefreshToken(cred.refreshToken);
             TokenResponse response = new GoogleRefreshTokenRequest(new NetHttpTransport(), new JacksonFactory(),

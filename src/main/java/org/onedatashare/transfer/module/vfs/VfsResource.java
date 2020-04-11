@@ -4,7 +4,7 @@ import org.apache.commons.vfs2.FileContent;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.onedatashare.transfer.model.core.*;
-import org.onedatashare.transfer.model.credential.UserInfoCredential;
+import org.onedatashare.transfer.model.credentialold.UserInfoCredentialOld;
 import org.onedatashare.transfer.model.drain.VfsDrain;
 import org.onedatashare.transfer.model.tap.VfsTap;
 import org.springframework.core.io.InputStreamResource;
@@ -178,7 +178,7 @@ public class VfsResource extends Resource<VfsSession, VfsResource> {
 
     public Mono<String> getDownloadURL() {
         String downloadLink = getSession().getUri().toString();
-        UserInfoCredential userInfoCredential = (UserInfoCredential) getSession().getCredential();
+        UserInfoCredentialOld userInfoCredential = (UserInfoCredentialOld) getSession().getCredentialOld();
         String username = userInfoCredential.getUsername(), password = userInfoCredential.getPassword();
         StringBuilder downloadURL = new StringBuilder();
 

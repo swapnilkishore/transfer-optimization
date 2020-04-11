@@ -21,25 +21,27 @@
  */
 
 
-package org.onedatashare.transfer.model.credential;
+package org.onedatashare.transfer.model.core;
 
 import lombok.Data;
-import org.onedatashare.transfer.model.core.Credential;
-import java.util.Date;
+
+
 
 @Data
-public class OAuthCredential extends Credential {
-  public transient String token;
-  public String name;
-  public String dropboxID;
-  public String refreshToken;
-  public Date expiredTime;
-  public boolean refreshTokenExp = false;
-  public Date lastRefresh;
+public abstract class CredentialOld {
+    public CredentialType type;
 
-  public OAuthCredential(String token) {
-    this.type = CredentialType.OAUTH;
-    this.token = token;
-
-  }
+    public enum CredentialType {
+        OAUTH("oauth"),
+        USERINFO("userinfo"),
+        GLOBUS("globus");
+        private final String text;
+        CredentialType(final String text){
+            this.text = text;
+        }
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
 }

@@ -2,9 +2,9 @@ package org.onedatashare.transfer.service;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import org.onedatashare.transfer.model.core.Credential;
 import org.onedatashare.transfer.model.core.EndpointType;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.onedatashare.transfer.model.credential.AccountEndpointCredential;
+import org.onedatashare.transfer.model.credential.OAuthEndpointCredential;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -37,15 +37,23 @@ public class CredentialService {
 
         this.client = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)))
-                .baseUrl(credentialServiceUrl)
                 .build();
     }
 
-    public Mono fetchCredential(String accessToken, EndpointType type, String credId){
+    private WebClient.ResponseSpec fetchCredential(String accessToken, EndpointType type, String credId){
         return client.get()
-                .uri(URI.create(String.format("%s/%s", type, credId)))
+                .uri(URI.create(String.format("%s/%s/%s",credentialServiceUrl, type, credId)))
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .retrieve()
-                .bodyToMono(Credential.class);
+                .retrieve();
+    }
+
+    public Mono<AccountEndpointCredential> fetchAccountCredential(String accessToken, EndpointType type, String credId){
+        return fetchCredential(accessToken, type, credId)
+                .bodyToMono(AccountEndpointCredential.class);
+    }
+
+    public Mono<OAuthEndpointCredential> fetchOAuthCredential(String accessToken, EndpointType type, String credId){
+        return fetchCredential(accessToken, type, credId)
+                .bodyToMono(OAuthEndpointCredential.class);
     }
 }

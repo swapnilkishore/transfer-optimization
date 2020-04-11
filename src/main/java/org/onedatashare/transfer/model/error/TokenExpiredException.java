@@ -1,12 +1,12 @@
 package org.onedatashare.transfer.model.error;
 
-import org.onedatashare.transfer.model.credential.OAuthCredential;
+import org.onedatashare.transfer.model.credentialold.OAuthCredentialOld;
 import org.springframework.http.HttpStatus;
 
 public class TokenExpiredException extends ODSError {
 
-    public OAuthCredential cred;
-    public TokenExpiredException(OAuthCredential cred, String message) {
+    public OAuthCredentialOld cred;
+    public TokenExpiredException(OAuthCredentialOld cred, String message) {
         super(message);
         type = "TokenExpired";
         error = "Token has expired.";

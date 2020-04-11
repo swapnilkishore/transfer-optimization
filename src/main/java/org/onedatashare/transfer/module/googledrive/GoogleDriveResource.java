@@ -4,8 +4,6 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import org.onedatashare.transfer.model.core.*;
-import org.onedatashare.transfer.model.credential.OAuthCredential;
-import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.drain.GoogleDriveDrain;
 import org.onedatashare.transfer.model.error.NotFoundException;
 //import org.onedatashare.transfer.service.ODSLoggerService;
@@ -14,12 +12,9 @@ import reactor.core.publisher.Mono;
 
 import java.io.*;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Resource class that provides services for Google Drive endpoint.

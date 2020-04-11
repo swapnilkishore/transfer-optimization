@@ -17,7 +17,7 @@ import java.util.ArrayList;
 @Data
 public abstract class Session<S extends Session<S, R>, R extends Resource<S, R>> {
   private final URI uri;
-  private final Credential credential;
+  private final CredentialOld credentialOld;
 
   /**
    * Default constructor.
@@ -25,7 +25,7 @@ public abstract class Session<S extends Session<S, R>, R extends Resource<S, R>>
    */
   protected Session(){
     this.uri = null;
-    this.credential = null;
+    this.credentialOld = null;
   }
 
   /**
@@ -39,12 +39,12 @@ public abstract class Session<S extends Session<S, R>, R extends Resource<S, R>>
   /**
    * Parameterized constructor that sets the enpoint URI of the resource and the credential in the current session object.
    * @param uri - Endpoint URI of the resource
-   * @param credential - Credential object of the resource (could be an OAuthCredential containing a token
+   * @param credentialOld - Credential object of the resource (could be an OAuthCredential containing a token
    *                   or a UserActionCredential containing raw username and password)
    */
-  protected Session(URI uri, Credential credential) {
+  protected Session(URI uri, CredentialOld credentialOld) {
     this.uri = uri;
-    this.credential = credential;
+    this.credentialOld = credentialOld;
   }
 
   /**

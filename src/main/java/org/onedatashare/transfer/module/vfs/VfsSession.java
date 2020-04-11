@@ -6,9 +6,9 @@ import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
-import org.onedatashare.transfer.model.core.Credential;
+import org.onedatashare.transfer.model.core.CredentialOld;
 import org.onedatashare.transfer.model.core.Session;
-import org.onedatashare.transfer.model.credential.UserInfoCredential;
+import org.onedatashare.transfer.model.credentialold.UserInfoCredentialOld;
 import org.onedatashare.transfer.model.error.AuthenticationRequired;
 import org.onedatashare.transfer.model.useraction.IdMap;
 import reactor.core.publisher.Mono;
@@ -22,8 +22,8 @@ public class VfsSession extends Session<VfsSession, VfsResource> {
   FileSystemManager fileSystemManager;
   FileSystemOptions fileSystemOptions;
 
-  public VfsSession(URI uri, Credential credential) {
-    super(uri, credential);
+  public VfsSession(URI uri, CredentialOld credentialOld) {
+    super(uri, credentialOld);
   }
 
   @Override
@@ -85,8 +85,8 @@ public class VfsSession extends Session<VfsSession, VfsResource> {
             FtpFileSystemConfigBuilder.getInstance().setPassiveMode(fileSystemOptions, true);
             SftpFileSystemConfigBuilder sfscb = SftpFileSystemConfigBuilder.getInstance();
             sfscb.setPreferredAuthentications(fileSystemOptions,"password,keyboard-interactive");
-            if(getCredential() instanceof UserInfoCredential && ((UserInfoCredential) getCredential()).getUsername() != null) {
-                UserInfoCredential cred = (UserInfoCredential) getCredential();
+            if(getCredentialOld() instanceof UserInfoCredentialOld && ((UserInfoCredentialOld) getCredentialOld()).getUsername() != null) {
+                UserInfoCredentialOld cred = (UserInfoCredentialOld) getCredentialOld();
                 StaticUserAuthenticator auth = new StaticUserAuthenticator(getUri().getHost(), cred.getUsername(), cred.getPassword());
                 try {
                     DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(fileSystemOptions, auth);
