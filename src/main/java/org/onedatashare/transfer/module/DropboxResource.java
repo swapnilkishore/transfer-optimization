@@ -1,6 +1,9 @@
 package org.onedatashare.transfer.module;
 
+import org.onedatashare.transfer.model.core.IdMap;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
+import org.onedatashare.transfer.model.drain.Drain;
+import org.onedatashare.transfer.model.tap.Tap;
 
 import java.io.UnsupportedEncodingException;
 
@@ -10,6 +13,16 @@ public class DropboxResource extends Resource {
 
     public DropboxResource(EndpointCredential credential) {
         super(credential);
+    }
+
+    @Override
+    public Tap getTap(IdMap idMap) {
+        return null;
+    }
+
+    @Override
+    public Drain getDrain(IdMap idMap) {
+        return null;
     }
 
     @Override

@@ -5,13 +5,16 @@ import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
 import org.onedatashare.transfer.module.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +28,8 @@ public class TransferService {
 
     private ConcurrentHashMap<UUID, Disposable> ongoingJobs = new ConcurrentHashMap<>();
 
+    private static final Logger logger = LoggerFactory.getLogger(TransferService.class);
+
     public Mono<? extends EndpointCredential> getEndpointCredential(String token, EndpointType type, String credId){
         if(ACCOUNT_CRED_TYPE.contains(type)){
             return credentialService.fetchAccountCredential(token, type, credId);
@@ -32,7 +37,7 @@ public class TransferService {
         else if(OAUTH_CRED_TYPE.contains(type)){
             return credentialService.fetchOAuthCredential(token, type, credId);
         }
-        return Mono.empty();
+        return Mono.error(new Exception("Invalid endpoint type. Must either be AccountCred or OauthCred type"));
     }
 
     @SneakyThrows
@@ -51,7 +56,7 @@ public class TransferService {
             case sftp:
                 return new SftpResource(cred);
             default:
-                return new Resource();
+                return null;
         }
     }
 
@@ -73,15 +78,19 @@ public class TransferService {
                 })
                 .map(transfer -> {
                     TransferJobRequest.Source source = request.getSource();
-                    IdMap[] filesToTransfer = new IdMap[source.getUriList().length];
-                    for(int i = 0; i < filesToTransfer.length; i++){
-                        IdMap tempFile = filesToTransfer[i];
-                        tempFile.setId(source.getIdList()[i]);
+                    ArrayList<IdMap> filesToTransfer = new ArrayList<>(source.getUriList().length);
+                    for(int i = 0; i < source.getUriList().length; i++){
+                        IdMap tempFile = new IdMap();
+                        if(source.getIdList() != null) {
+                            tempFile.setId(source.getIdList()[i]);
+                        }
                         tempFile.setUri(source.getUriList()[i]);
+                        filesToTransfer.add(tempFile);
                     }
-                    transfer.setFilesToTransfer(Arrays.asList(filesToTransfer));
-                    return transfer.start(TRANSFER_SLICE_SIZE);
+                    transfer.setFilesToTransfer(filesToTransfer);
+                    return transfer.blockingStart(TRANSFER_SLICE_SIZE);
                 })
+                .subscribeOn(Schedulers.elastic())
                 .then();
     }
 
@@ -98,28 +107,5 @@ public class TransferService {
         return Mono.error(new Exception("Unsupported operation"));
     }
 
-
-    public void processTransferFromJob(TransferJob job) {
-//        Transfer<ResourceOld, ResourceOld> transfer = new Transfer<>();
-
-//        Disposable ongoingJob = getResourceWithUserActionResource(user.get(), job.getSrc())
-//                .map(transfer::setSource)
-//                .flatMap(t -> getResourceWithUserActionResource(user.get(), job.getDest()))
-//                .map(transfer::setDestination)
-//                .flux()
-//                .flatMap(transfer1 -> transfer1.start(TRANSFER_SLICE_SIZE))
-//                .doOnSubscribe(s -> job.setStatus(JobStatus.transferring))
-//                .doOnCancel(new RunnableCanceler(job))
-//                .doFinally(s -> {
-//                    if (job.getStatus() != JobStatus.cancelled && job.getStatus() != JobStatus.failed)
-//                        job.setStatus(JobStatus.complete);
-//                    jobService.saveJob(job).subscribe();
-//                    ongoingJobs.remove(job.getUuid());
-//                })
-//                .map(job::updateJobWithTransferInfo)
-//                .flatMap(jobService::saveJob)
-//                .subscribe();
-//        ongoingJobs.put(job.getUuid(), ongoingJob);
-    }
 
 }

@@ -3,6 +3,7 @@ package org.onedatashare.transfer.model.core;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.onedatashare.transfer.model.drain.Drain;
+import org.onedatashare.transfer.model.request.TransferOptions;
 import org.onedatashare.transfer.model.tap.Tap;
 import org.onedatashare.transfer.model.util.Progress;
 import org.onedatashare.transfer.model.util.Throughput;
@@ -11,19 +12,23 @@ import org.onedatashare.transfer.model.util.TransferInfo;
 import org.onedatashare.transfer.module.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 @NoArgsConstructor
 @Data
-public class Transfer {
-    public Resource source;
-    public Resource destination;
-
+public class Transfer<S extends Resource, D extends Resource> {
+    public S source;
+    public D destination;
     public List<IdMap> filesToTransfer;
+    public TransferOptions options;
 
+    private ArrayList<Disposable> disposableArrayList = new ArrayList<>();
     private static final Logger logger = LoggerFactory.getLogger(Transfer.class);
 
     /** Periodically updated information about the ongoing transfer. */
@@ -34,18 +39,18 @@ public class Transfer {
     protected Progress progress = new Progress();
     protected Throughput throughput = new Throughput();
 
-    public Transfer(Resource source, Resource destination){
+    public Transfer(S source, D destination){
         this.source = source;
         this.destination = destination;
     }
 
-  public Flux<TransferInfo> start(int sliceSize){
-        return Flux.fromIterable(filesToTransfer)
-                .doOnSubscribe(s -> startTimer())
-                .flatMap(id -> {
-                    Tap tap = source.getTap(id);
-                    Drain drain = destination.getDrain(id);
-                    return tap.openTap(sliceSize)
+  public void start(int sliceSize){
+        Flux.fromIterable(filesToTransfer)
+                .flatMap(file -> {
+                    logger.info("Transferring file " + file.getUri());
+                    Tap tap = source.getTap(file);
+                    Drain drain = destination.getDrain(file);
+                    tap.openTap(sliceSize)
                             .doOnNext(slice -> {
                                 try {
                                     drain.drain(slice);
@@ -53,7 +58,6 @@ public class Transfer {
                                     e.printStackTrace();
                                 }
                             })
-                            .doOnError(err -> logger.error(err.getMessage()))
                             .map(this::addProgress)
                             .doOnComplete(() -> {
                                 try {
@@ -61,58 +65,40 @@ public class Transfer {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                            });
-                })
-                .doFinally(s -> done());
-  }
-
-//    public Flux<TransferInfo> start(Long sliceSize) {
-//        // HTTP is read only
-//        if(destination instanceof HttpResourceOld)
-//            return Flux.error(new Exception("HTTP is read-only"));
-//
-//        Stat tapStat = (Stat)source.getTransferStat().block();
-//        info.setTotal(tapStat.getSize());
-
-
-//        return Flux.fromIterable(tapStat.getFilesList())
-//                .doOnSubscribe(s -> startTimer())
-//                .flatMap(fileStat -> {
-//                    final Drain drain;
-//                    if( destination instanceof BoxResourceOld){
-//                        drain =  ((BoxResourceOld)destination).sink(fileStat, tapStat.isDir());
-//                    }
-//                    else if(tapStat.isDir())
-//                        drain = destination.sink(fileStat);
-//                    else {
-//                        drain = destination.sink();
-//                    }
-//                    return source.tap().tap(fileStat, sliceSize)
-//                            .subscribeOn(Schedulers.elastic())
-//                            .doOnNext(drain::drain)
-//                            .subscribeOn(Schedulers.elastic())
-//                            .map(this::addProgress)
-//                            .doOnComplete(drain::finish);
-//                }).doFinally(s -> done());
-//        return null;
-//    }
-
-//    public void initialize() {
-//        Stat stat = (Stat) source.stat().block();
-//        info.setTotal(stat.getSize());
-//    }
-
-    public void initializeUpload(int fileSize){
-        info.setTotal(fileSize);
+                            })
+                            .subscribeOn(Schedulers.elastic())
+                            .subscribe();
+                    return Flux.empty();
+                });
     }
 
-    public void done() {
-        timer.stop();
+    public Flux<TransferInfo> blockingStart(int sliceSize){
+        for(IdMap file : filesToTransfer){
+            logger.info("Transferring file " + file.getUri());
+            Tap tap = source.getTap(file);
+            Drain drain = destination.getDrain(file);
+            tap.openTap(sliceSize)
+                    .doOnNext(slice -> {
+                        try {
+                            drain.drain(slice);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    })
+                    .map(this::addProgress)
+                    .doOnComplete(() -> {
+                        try {
+                            drain.finish();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    })
+                    .subscribeOn(Schedulers.elastic())
+                    .blockLast();
+        }
+        return Flux.just(new TransferInfo());
     }
 
-    public void startTimer() {
-        timer = new Time();
-    }
 
     public TransferInfo addProgress(Slice slice) {
         long size = slice.length();
@@ -121,13 +107,4 @@ public class Transfer {
         info.update(timer, progress, throughput);
         return info;
     }
-
-    public TransferInfo addProgressSize(Long totalSize) {
-        long size = totalSize - progress.total();
-        progress.add(size);
-        throughput.update(size);
-        info.update(timer, progress, throughput);
-        return info;
-    }
-
 }

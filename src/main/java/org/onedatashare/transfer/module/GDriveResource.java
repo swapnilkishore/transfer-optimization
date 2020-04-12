@@ -1,6 +1,9 @@
 package org.onedatashare.transfer.module;
 
+import org.onedatashare.transfer.model.core.IdMap;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
+import org.onedatashare.transfer.model.drain.Drain;
+import org.onedatashare.transfer.model.tap.Tap;
 
 import java.io.UnsupportedEncodingException;
 
@@ -9,6 +12,16 @@ import static org.onedatashare.transfer.model.core.ODSConstants.DRIVE_URI_SCHEME
 public class GDriveResource extends Resource {
     public GDriveResource(EndpointCredential cred) {
         super(cred);
+    }
+
+    @Override
+    public Tap getTap(IdMap idMap) {
+        return null;
+    }
+
+    @Override
+    public Drain getDrain(IdMap idMap) {
+        return null;
     }
 
     @Override

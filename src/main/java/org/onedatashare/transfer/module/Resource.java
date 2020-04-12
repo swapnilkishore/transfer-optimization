@@ -12,25 +12,20 @@ import org.onedatashare.transfer.model.tap.Tap;
 import java.io.UnsupportedEncodingException;
 
 @NoArgsConstructor
-public class Resource {
+public abstract class Resource {
     EndpointCredential credential;
 
     Resource(EndpointCredential credential){
         this.credential = credential;
     }
 
-    public Tap getTap(IdMap idMap){
-        throw new NotImplementedException();
-    }
+    public abstract Tap getTap(IdMap idMap);
 
-    public Drain getDrain(IdMap idMap){
-        throw new NotImplementedException();
-    }
+    public abstract Drain getDrain(IdMap idMap);
 
     public String pathFromUri(String uri) throws UnsupportedEncodingException {
         String path = "";
         path = java.net.URLDecoder.decode(path, "UTF-8");
         return path;
     }
-
 }
