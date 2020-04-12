@@ -4,14 +4,15 @@ package org.onedatashare.transfer.model.core;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
-import org.onedatashare.transfer.model.useraction.UserActionResource;
 import org.onedatashare.transfer.model.util.Time;
 import org.onedatashare.transfer.model.util.Times;
 import org.onedatashare.transfer.model.util.TransferInfo;
+import org.springframework.data.annotation.Id;
 
 @Data
 @Accessors(chain = true)
 public class TransferJob {
+    @Id
     private String id;
 
     /** An ID meaningful to the user who owns the job. */

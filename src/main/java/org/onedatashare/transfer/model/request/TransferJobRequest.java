@@ -1,7 +1,6 @@
 package org.onedatashare.transfer.model.request;
 
 import lombok.Data;
-import org.onedatashare.transfer.model.core.CredentialOld;
 import org.onedatashare.transfer.model.core.EndpointType;
 
 import java.util.ArrayList;
@@ -13,20 +12,22 @@ public class TransferJobRequest {
     private Destination destination;
 
     @Data
-    public static class Destination {
+    public static abstract class BaseSD {
         private EndpointType type;
-        private String id;
-        private String uri;
         private String credId;
-        private transient CredentialOld credentialOld;
     }
 
     @Data
-    public static class Source {
+    public static class Destination extends BaseSD {
+        private String id;
+        private String uri;
+    }
+
+    @Data
+    public static class Source extends BaseSD {
         private EndpointType type;
         private ArrayList<String> idList;
         private ArrayList<String> uriList;
         private String credId;
-        private transient CredentialOld credentialOld;
     }
 }

@@ -1,5 +1,5 @@
 package org.onedatashare.transfer.model.core;
 
-public enum Role {
-    USER, ADMIN, OWNER
+public enum FileType {
+    FILE, FOLDER
 }

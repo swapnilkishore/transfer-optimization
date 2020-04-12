@@ -1,18 +1,14 @@
 package org.onedatashare.transfer.service;
 
 import io.jsonwebtoken.Claims;
-import org.onedatashare.transfer.model.core.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ODSAuthenticationManager implements ReactiveAuthenticationManager {
@@ -33,16 +29,10 @@ public class ODSAuthenticationManager implements ReactiveAuthenticationManager {
         if(userName != null && jwtUtil.validateToken(authToken)){
             Claims claims = jwtUtil.getAllClaimsFromToken(authToken);
             List<String> roleList = claims.get("role", List.class);
-            List<Role> roles = new ArrayList<>();
-            if(roleList != null) {
-                for (String role : roleList) {
-                    roles.add(Role.valueOf(role));
-                }
-            }
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userName,
                     authToken,
-                    roles.stream().map(authority -> new SimpleGrantedAuthority(authority.name())).collect(Collectors.toList())
+                    null
             );
             return Mono.just(auth);
         }

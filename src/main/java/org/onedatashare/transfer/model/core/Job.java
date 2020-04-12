@@ -1,7 +1,7 @@
 package org.onedatashare.transfer.model.core;
 
 import lombok.Data;
-import org.onedatashare.transfer.model.useraction.UserActionResource;
+import org.onedatashare.transfer.model.request.TransferJobRequest;
 import org.onedatashare.transfer.model.util.Time;
 import org.onedatashare.transfer.model.util.Times;
 import org.onedatashare.transfer.model.util.TransferInfo;
@@ -19,7 +19,8 @@ import java.util.UUID;
 public class Job {
   private JobStatus status = JobStatus.scheduled;
 
-  private UserActionResource src, dest;
+  private TransferJobRequest.Source src;
+  private TransferJobRequest.Destination dest;
 
   private String message;
 
@@ -56,7 +57,7 @@ public class Job {
   }
 
 
-  public Job(UserActionResource src, UserActionResource dest) {
+  public Job(TransferJobRequest.Source src, TransferJobRequest.Destination dest) {
     uuid();
     setSrc(src);
     setDest(dest);

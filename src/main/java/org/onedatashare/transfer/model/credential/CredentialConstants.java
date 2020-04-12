@@ -6,11 +6,11 @@ import org.onedatashare.transfer.model.core.EndpointType;
 import java.util.HashSet;
 
 public class CredentialConstants {
-    public static HashSet<EndpointType> accountCredentialType = new HashSet<>(Arrays.asList(new EndpointType[]{
+    public static final HashSet<EndpointType> ACCOUNT_CRED_TYPE = new HashSet<>(Arrays.asList(new EndpointType[]{
             EndpointType.s3, EndpointType.ftp, EndpointType.http, EndpointType.sftp
     }));
 
-    public static HashSet<EndpointType> oauthCredentialType = new HashSet<>(Arrays.asList(new EndpointType[]{
+    public static final HashSet<EndpointType> OAUTH_CRED_TYPE = new HashSet<>(Arrays.asList(new EndpointType[]{
             EndpointType.box, EndpointType.dropbox, EndpointType.gdrive, EndpointType.gridftp
     }));
 }

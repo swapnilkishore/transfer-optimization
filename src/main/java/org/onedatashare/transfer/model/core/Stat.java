@@ -30,12 +30,7 @@ public class Stat {
   /**
    * Whether or not the resource is a directory.
    */
-  private boolean dir;
-
-  /**
-   * Whether or not the resource is a file.
-   */
-  private boolean file;
+  private FileType type;
 
   /**
    * If the resource is a link, the link target.
@@ -82,10 +77,10 @@ public class Stat {
     if (total_size >= 0) {
       return total_size;
     }
-    if (dir) {
+    if (type == FileType.FOLDER) {
       long s = size;
       if (files != null) for (Stat f : files)
-        s += f.dir ? 0 : f.size();
+        s += f.type == FileType.FOLDER ? 0 : f.size();
       return total_size = s;
     }
     return total_size = size;
@@ -98,8 +93,7 @@ public class Stat {
     name = ft.name;
     size = ft.size;
     time = ft.time;
-    dir = ft.dir;
-    file = ft.file;
+    type = ft.type;
     link = ft.link;
     permissions = ft.permissions;
     return this;
@@ -112,7 +106,7 @@ public class Stat {
     if (total_num > 0) {
       return total_num;
     }
-    if (dir) {
+    if (type == FileType.FOLDER) {
       long n = 1;
       if (files != null) for (Stat f : files)
         n += f.count();
