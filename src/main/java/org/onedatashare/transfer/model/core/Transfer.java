@@ -9,6 +9,8 @@ import org.onedatashare.transfer.model.util.Throughput;
 import org.onedatashare.transfer.model.util.Time;
 import org.onedatashare.transfer.model.util.TransferInfo;
 import org.onedatashare.transfer.module.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -21,6 +23,8 @@ public class Transfer {
     public Resource destination;
 
     public List<IdMap> filesToTransfer;
+
+    private static final Logger logger = LoggerFactory.getLogger(Transfer.class);
 
     /** Periodically updated information about the ongoing transfer. */
     public final TransferInfo info = new TransferInfo();
@@ -42,9 +46,22 @@ public class Transfer {
                     Tap tap = source.getTap(id);
                     Drain drain = destination.getDrain(id);
                     return tap.openTap(sliceSize)
-                            .doOnNext(drain::drain)
+                            .doOnNext(slice -> {
+                                try {
+                                    drain.drain(slice);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            })
+                            .doOnError(err -> logger.error(err.getMessage()))
                             .map(this::addProgress)
-                            .doOnComplete(drain::finish);
+                            .doOnComplete(() -> {
+                                try {
+                                    drain.finish();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
                 })
                 .doFinally(s -> done());
   }

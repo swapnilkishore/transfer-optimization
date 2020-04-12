@@ -11,12 +11,9 @@ import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.tap.Tap;
 import org.onedatashare.transfer.model.tap.VfsTap;
 
-public class FtpResource extends Resource {
-    private FileSystemManager fileSystemManager;
-    private FileSystemOptions fileSystemOptions;
-
+public class FtpResource extends VfsResource {
     @SneakyThrows
-    public FtpResource(EndpointCredential credential) throws FileSystemException {
+    public FtpResource(EndpointCredential credential) {
         super(credential);
         this.fileSystemOptions = new FileSystemOptions();
         FtpFileSystemConfigBuilder.getInstance().setPassiveMode(this.fileSystemOptions, true);
@@ -31,17 +28,4 @@ public class FtpResource extends Resource {
 
         this.fileSystemManager = VFS.getManager();
     }
-
-    @Override
-    public Tap getTap(IdMap idMap){
-        try {
-            FileObject fileObject = fileSystemManager.resolveFile(idMap.getUri());
-            long size = fileObject.getContent().getSize();
-            return new VfsTap(fileObject.getContent().getInputStream(), size);
-        } catch (FileSystemException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
 }

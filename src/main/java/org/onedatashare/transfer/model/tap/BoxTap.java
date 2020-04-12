@@ -12,14 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class BoxTap extends Tap {
+public class BoxTap implements Tap {
     long size;
     BoxAPIConnection api = null;//getSession().client;
     BoxAPIRequest req;
-
-    protected BoxTap(InputStream inputStream, long size) {
-        super(inputStream, size);
-    }
 
     public Flux<Slice> tap(Stat stat, long sliceSize) {
         BoxFile file = new BoxFile(api, stat.getId());

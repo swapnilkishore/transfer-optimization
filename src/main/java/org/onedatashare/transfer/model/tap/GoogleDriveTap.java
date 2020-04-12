@@ -11,14 +11,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class GoogleDriveTap extends Tap {
+public class GoogleDriveTap implements Tap {
     long size;
     Drive drive;
     com.google.api.client.http.HttpRequest httpRequestGet;
-
-    protected GoogleDriveTap(InputStream inputStream, long size) {
-        super(inputStream, size);
-    }
 
     public Flux<Slice> tap(Stat stat, long sliceSize) {
 

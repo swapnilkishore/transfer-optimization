@@ -10,13 +10,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DropboxTap extends Tap {
+public class DropboxTap implements Tap {
     DownloadBuilder downloadBuilder;
     long size;
-
-    protected DropboxTap(InputStream inputStream, long size) {
-        super(inputStream, size);
-    }
 
     public Flux<Slice> tap(Stat stat, long sliceSize) {
         String downloadPath = "";

@@ -6,10 +6,17 @@ import reactor.core.publisher.Flux;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class VfsTap extends Tap {
+public class VfsTap implements Tap {
+    private InputStream inputStream;
+    private long size;
 
-    public VfsTap(InputStream inputStream, long size){
-        super(inputStream, size);
+    private VfsTap(){}
+
+    public static VfsTap initialize(InputStream stream, long size){
+        VfsTap vfsTap = new VfsTap();
+        vfsTap.inputStream = stream;
+        vfsTap.size = size;
+        return vfsTap;
     }
 
     @Override
