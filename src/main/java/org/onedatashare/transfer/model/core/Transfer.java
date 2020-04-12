@@ -2,6 +2,8 @@ package org.onedatashare.transfer.model.core;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.onedatashare.transfer.model.drain.Drain;
+import org.onedatashare.transfer.model.tap.Tap;
 import org.onedatashare.transfer.model.util.Progress;
 import org.onedatashare.transfer.model.util.Throughput;
 import org.onedatashare.transfer.model.util.Time;
@@ -9,12 +11,16 @@ import org.onedatashare.transfer.model.util.TransferInfo;
 import org.onedatashare.transfer.module.Resource;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 
 @NoArgsConstructor
 @Data
 public class Transfer {
     public Resource source;
     public Resource destination;
+
+    public List<IdMap> filesToTransfer;
 
     /** Periodically updated information about the ongoing transfer. */
     public final TransferInfo info = new TransferInfo();
@@ -29,8 +35,22 @@ public class Transfer {
         this.destination = destination;
     }
 
-    public Flux<TransferInfo> start(Long sliceSize) {
-        // HTTP is read only
+  public Flux<TransferInfo> start(int sliceSize){
+        return Flux.fromIterable(filesToTransfer)
+                .doOnSubscribe(s -> startTimer())
+                .flatMap(id -> {
+                    Tap tap = source.getTap(id);
+                    Drain drain = destination.getDrain(id);
+                    return tap.openTap(sliceSize)
+                            .doOnNext(drain::drain)
+                            .map(this::addProgress)
+                            .doOnComplete(drain::finish);
+                })
+                .doFinally(s -> done());
+  }
+
+//    public Flux<TransferInfo> start(Long sliceSize) {
+//        // HTTP is read only
 //        if(destination instanceof HttpResourceOld)
 //            return Flux.error(new Exception("HTTP is read-only"));
 //
@@ -57,8 +77,8 @@ public class Transfer {
 //                            .map(this::addProgress)
 //                            .doOnComplete(drain::finish);
 //                }).doFinally(s -> done());
-        return null;
-    }
+//        return null;
+//    }
 
 //    public void initialize() {
 //        Stat stat = (Stat) source.stat().block();

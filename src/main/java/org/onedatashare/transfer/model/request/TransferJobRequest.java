@@ -26,8 +26,8 @@ public class TransferJobRequest {
     @Data
     public static class Source extends BaseSD {
         private EndpointType type;
-        private ArrayList<String> idList;
-        private ArrayList<String> uriList;
+        private String[] idList;
+        private String[] uriList;
         private String credId;
     }
 }

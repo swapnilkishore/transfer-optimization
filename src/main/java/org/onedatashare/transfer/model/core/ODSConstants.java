@@ -12,10 +12,5 @@ public class ODSConstants {
     public static final String HTTPS_URI_SCHEME = "https://";
     public static final String DROPBOX_CLIENT_IDENTIFIER = "OneDataShare-DIDCLab";
 
-    public static final String COOKIE = "cookie";
-    public static final String TOKEN_COOKIE_NAME = "ATOKEN";
-
-
-    public static final long TRANSFER_SLICE_SIZE = 1<<20;
-
+    public static final int TRANSFER_SLICE_SIZE = 1<<20;
 }

@@ -8,12 +8,16 @@ import reactor.core.publisher.Flux;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class DropboxTap implements Tap {
+public class DropboxTap extends Tap {
     DownloadBuilder downloadBuilder;
     long size;
 
-    @Override
+    protected DropboxTap(InputStream inputStream, long size) {
+        super(inputStream, size);
+    }
+
     public Flux<Slice> tap(Stat stat, long sliceSize) {
         String downloadPath = "";
 //        if(!isFileResource())
@@ -52,5 +56,10 @@ public class DropboxTap implements Tap {
                     }
                     return state + sliceSize;
                 });
+    }
+
+    @Override
+    public Flux<Slice> openTap(int sliceSize) {
+        return null;
     }
 }

@@ -12,12 +12,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class BoxTap implements Tap {
+public class BoxTap extends Tap {
     long size;
     BoxAPIConnection api = null;//getSession().client;
     BoxAPIRequest req;
 
-    @Override
+    protected BoxTap(InputStream inputStream, long size) {
+        super(inputStream, size);
+    }
+
     public Flux<Slice> tap(Stat stat, long sliceSize) {
         BoxFile file = new BoxFile(api, stat.getId());
         try {
@@ -42,7 +45,6 @@ public class BoxTap implements Tap {
      * @param sliceSize
      * @return A flux generated slice
      */
-    @Override
     public Flux<Slice> tap(long sliceSize) {
 
         int sliceSizeInt = Math.toIntExact(sliceSize);
@@ -80,4 +82,8 @@ public class BoxTap implements Tap {
 
     }
 
+    @Override
+    public Flux<Slice> openTap(int sliceSize) {
+        return null;
+    }
 }

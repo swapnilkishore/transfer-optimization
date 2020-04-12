@@ -12,11 +12,9 @@ import java.util.Date;
 @Document
 public class OAuthEndpointCredential extends EndpointCredential {
     private String token;
-    private byte[] encryptedToken;
     private boolean tokenExpires = false;
     private Date expiresAt;
     private String refreshToken;
-    private byte[] encryptedRefreshToken;
     private boolean refreshTokenExpires = false;
 
     @Override

@@ -1,5 +1,6 @@
 package org.onedatashare.transfer.service;
 
+import lombok.SneakyThrows;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +35,7 @@ public class TransferService {
         return Mono.empty();
     }
 
+    @SneakyThrows
     public Resource createResource(EndpointCredential cred, EndpointType type){
         switch (type){
             case http:
@@ -53,23 +55,6 @@ public class TransferService {
         }
     }
 
-    public String pathFromUri(String uri) {
-        String path = "";
-        if (uri.startsWith(DROPBOX_URI_SCHEME))
-            path = uri.substring(DROPBOX_URI_SCHEME.length() - 1);
-        else if (uri.startsWith(DRIVE_URI_SCHEME))
-            path = uri.substring(DRIVE_URI_SCHEME.length() - 1);
-        else
-            path = uri;
-
-        try {
-            path = java.net.URLDecoder.decode(path, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return path;
-    }
-
     private Mono<String> getUserCredFromRequest(){
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (String) securityContext.getAuthentication().getCredentials());
@@ -86,7 +71,17 @@ public class TransferService {
                             .map(credential -> createResource(credential, destination.getType()));
                     return Mono.zip(sourceResourceMono, destResourceMono, Transfer::new);
                 })
-                .map(transfer -> transfer.start(TRANSFER_SLICE_SIZE))
+                .map(transfer -> {
+                    TransferJobRequest.Source source = request.getSource();
+                    IdMap[] filesToTransfer = new IdMap[source.getUriList().length];
+                    for(int i = 0; i < filesToTransfer.length; i++){
+                        IdMap tempFile = filesToTransfer[i];
+                        tempFile.setId(source.getIdList()[i]);
+                        tempFile.setUri(source.getUriList()[i]);
+                    }
+                    transfer.setFilesToTransfer(Arrays.asList(filesToTransfer));
+                    return transfer.start(TRANSFER_SLICE_SIZE);
+                })
                 .then();
     }
 
@@ -99,8 +94,8 @@ public class TransferService {
      * @param uuid
      * @return Mono of job that was stopped
      */
-    public Mono<Job> cancel(UUID uuid) {
-        return null;
+    public Mono<Void> cancel(UUID uuid) {
+        return Mono.error(new Exception("Unsupported operation"));
     }
 
 

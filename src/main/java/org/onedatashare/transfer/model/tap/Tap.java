@@ -1,10 +1,19 @@
 package org.onedatashare.transfer.model.tap;
 
+
 import org.onedatashare.transfer.model.core.Slice;
-import org.onedatashare.transfer.model.core.Stat;
 import reactor.core.publisher.Flux;
 
-public interface Tap {
-  Flux<Slice> tap(long sliceSize);
-    Flux<Slice> tap(Stat stat, long sliceSize);
+import java.io.InputStream;
+
+public abstract class Tap {
+  protected InputStream inputStream;
+  protected long size;
+
+  protected Tap(InputStream inputStream, long size){
+    this.inputStream = inputStream;
+    this.size = size;
+  }
+
+  public abstract Flux<Slice> openTap(int sliceSize);
 }

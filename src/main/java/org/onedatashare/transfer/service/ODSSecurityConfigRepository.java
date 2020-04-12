@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import static org.onedatashare.transfer.model.core.ODSConstants.TOKEN_COOKIE_NAME;
-
 @Service
 public class ODSSecurityConfigRepository implements ServerSecurityContextRepository {
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -47,10 +45,6 @@ public class ODSSecurityConfigRepository implements ServerSecurityContextReposit
                 token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
                 if(token != null && token.startsWith(TOKEN_PREFIX)){
                     token = token.substring(TOKEN_PREFIX.length());
-                }
-                // Try fetching token from the cookies
-                if(token == null) {
-                    token = request.getCookies().getFirst(TOKEN_COOKIE_NAME).getValue();
                 }
             } catch (NullPointerException npe) {
                 logger.error("No token Found for request at " + endpoint);

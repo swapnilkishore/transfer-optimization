@@ -11,12 +11,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class GoogleDriveTap implements Tap {
+public class GoogleDriveTap extends Tap {
     long size;
-    Drive drive ;//= getSession().getService();
+    Drive drive;
     com.google.api.client.http.HttpRequest httpRequestGet;
 
-    @Override
+    protected GoogleDriveTap(InputStream inputStream, long size) {
+        super(inputStream, size);
+    }
+
     public Flux<Slice> tap(Stat stat, long sliceSize) {
 
         String downloadUrl = "https://www.googleapis.com/drive/v3/files/"+stat.getId()+"?alt=media";
@@ -29,7 +32,6 @@ public class GoogleDriveTap implements Tap {
         return tap(sliceSize);
     }
 
-    @Override
     public Flux<Slice> tap(long sliceSize) {
         return Flux.generate(
                 () -> 0L,
@@ -64,5 +66,10 @@ public class GoogleDriveTap implements Tap {
                     }
                     return state + sliceSize;
                 });
+    }
+
+    @Override
+    public Flux<Slice> openTap(int sliceSize) {
+        return null;
     }
 }
