@@ -15,7 +15,6 @@ public class VfsResource extends Resource {
 
     VfsResource(EndpointCredential credential){
         this.credential = credential;
-
     }
 
 
@@ -37,5 +36,4 @@ public class VfsResource extends Resource {
         fileObject.createFile();
         return VfsDrain.initialize(fileObject.getContent().getOutputStream());
     }
-
 }
