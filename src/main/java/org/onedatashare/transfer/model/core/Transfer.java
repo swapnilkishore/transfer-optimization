@@ -18,6 +18,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @NoArgsConstructor
@@ -27,6 +28,10 @@ public class Transfer<S extends Resource, D extends Resource> {
     public D destination;
     public List<IdMap> filesToTransfer;
     public TransferOptions options;
+    public String sourceBaseUri;
+    public String destinationBaseUri;
+
+    public AtomicInteger concurrency = new AtomicInteger(5);
 
     private ArrayList<Disposable> disposableArrayList = new ArrayList<>();
     private static final Logger logger = LoggerFactory.getLogger(Transfer.class);
@@ -44,61 +49,46 @@ public class Transfer<S extends Resource, D extends Resource> {
         this.destination = destination;
     }
 
-  public void start(int sliceSize){
-        Flux.fromIterable(filesToTransfer)
+  public Flux start(int sliceSize){
+        logger.info("Within transfer start");
+        return Flux.fromIterable(filesToTransfer)
+                .doOnSubscribe(s -> logger.info("Transfer started...."))
                 .flatMap(file -> {
-                    logger.info("Transferring file " + file.getUri());
-                    Tap tap = source.getTap(file);
-                    Drain drain = destination.getDrain(file);
-                    tap.openTap(sliceSize)
+                    logger.info("Transferring " + file.getUri());
+                    Tap tap;
+                    try {
+                        tap = source.getTap(file, sourceBaseUri);
+                    } catch (Exception e) {
+                        logger.error("Unable to read from the tap - " + e.getMessage());
+                        return Flux.empty();
+                    }
+                    Drain drain;
+                    try {
+                        drain = destination.getDrain(file, destinationBaseUri);
+                    } catch (Exception e) {
+                        logger.error("Unable to create a new file drain - " + e.getMessage());
+                        return Flux.empty();
+                    }
+                    Drain finalDrain = drain;
+                    return tap.openTap(sliceSize)
                             .doOnNext(slice -> {
+                                logger.info("slice recieveds");
                                 try {
-                                    drain.drain(slice);
+                                    finalDrain.drain(slice);
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             })
-                            .map(this::addProgress)
                             .doOnComplete(() -> {
                                 try {
-                                    drain.finish();
+                                    finalDrain.finish();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             })
-                            .subscribeOn(Schedulers.elastic())
-                            .subscribe();
-                    return Flux.empty();
-                });
+                            .subscribeOn(Schedulers.elastic());
+                }).doOnComplete(() -> logger.info("Done transferring"));
     }
-
-    public Flux<TransferInfo> blockingStart(int sliceSize){
-        for(IdMap file : filesToTransfer){
-            logger.info("Transferring file " + file.getUri());
-            Tap tap = source.getTap(file);
-            Drain drain = destination.getDrain(file);
-            tap.openTap(sliceSize)
-                    .doOnNext(slice -> {
-                        try {
-                            drain.drain(slice);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    })
-                    .map(this::addProgress)
-                    .doOnComplete(() -> {
-                        try {
-                            drain.finish();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    })
-                    .subscribeOn(Schedulers.elastic())
-                    .blockLast();
-        }
-        return Flux.just(new TransferInfo());
-    }
-
 
     public TransferInfo addProgress(Slice slice) {
         long size = slice.length();

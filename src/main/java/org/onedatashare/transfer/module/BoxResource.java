@@ -15,14 +15,15 @@ public class BoxResource extends Resource {
     }
 
     @Override
-    public Tap getTap(IdMap idMap) {
+    public Tap getTap(IdMap idMap, String baseUrl) throws Exception {
         return null;
     }
 
     @Override
-    public Drain getDrain(IdMap idMap) {
+    public Drain getDrain(IdMap idMap, String baseUrl) throws Exception {
         return null;
     }
+
 
     @Override
     public String pathFromUri(String uri) throws UnsupportedEncodingException {

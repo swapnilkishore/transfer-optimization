@@ -14,20 +14,16 @@ public class TransferJobRequest {
     private TransferOptions options;
 
     @Data
-    public static abstract class BaseSD {
+    public static class Destination {
         protected EndpointType type;
         protected String credId;
+        protected String baseId;
+        protected String baseUrl;
     }
 
     @Data
-    public static class Destination extends BaseSD {
-        private String id;
-        private String uri;
-    }
-
-    @Data
-    public static class Source extends BaseSD {
+    public static class Source extends Destination {
         private String[] idList;
-        private String[] uriList;
+        private String[] urlList;
     }
 }

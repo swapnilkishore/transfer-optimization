@@ -19,9 +19,9 @@ public abstract class Resource {
         this.credential = credential;
     }
 
-    public abstract Tap getTap(IdMap idMap);
+    public abstract Tap getTap(IdMap idMap, String baseUrl) throws Exception;
 
-    public abstract Drain getDrain(IdMap idMap);
+    public abstract Drain getDrain(IdMap idMap, String baseUrl) throws Exception;
 
     public String pathFromUri(String uri) throws UnsupportedEncodingException {
         String path = "";

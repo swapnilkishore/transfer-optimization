@@ -8,6 +8,7 @@ import org.onedatashare.transfer.module.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
@@ -62,36 +63,46 @@ public class TransferService {
 
     private Mono<String> getUserCredFromRequest(){
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (String) securityContext.getAuthentication().getCredentials());
+                .map(s -> {
+                    Authentication authentication = s.getAuthentication();
+                    return (String) authentication.getCredentials();
+                });
+    }
+
+    private ArrayList<IdMap> getFilesToTransfer(TransferJobRequest.Source source){
+        ArrayList<IdMap> filesToTransfer = new ArrayList<>(source.getUrlList().length);
+        for(int i = 0; i < source.getUrlList().length; i++){
+            IdMap tempFile = new IdMap();
+            if(source.getIdList() != null) {
+                tempFile.setId(source.getIdList()[i]);
+            }
+            tempFile.setUri(source.getUrlList()[i]);
+            filesToTransfer.add(tempFile);
+        }
+        return filesToTransfer;
     }
 
     public Mono<Void> submit(TransferJobRequest request){
+        logger.info("In submit Function");
         return getUserCredFromRequest()
-                .flatMap(token -> {
-                    TransferJobRequest.Source source = request.getSource();
-                    TransferJobRequest.Destination destination = request.getDestination();
-                    Mono<Resource> sourceResourceMono = getEndpointCredential(token, source.getType(), source.getCredId())
-                            .map(credential -> createResource(credential, source.getType()));
-                    Mono<Resource> destResourceMono =getEndpointCredential(token, destination.getType(), destination.getCredId())
-                            .map(credential -> createResource(credential, destination.getType()));
-                    return Mono.zip(sourceResourceMono, destResourceMono, Transfer::new);
-                })
-                .map(transfer -> {
-                    TransferJobRequest.Source source = request.getSource();
-                    ArrayList<IdMap> filesToTransfer = new ArrayList<>(source.getUriList().length);
-                    for(int i = 0; i < source.getUriList().length; i++){
-                        IdMap tempFile = new IdMap();
-                        if(source.getIdList() != null) {
-                            tempFile.setId(source.getIdList()[i]);
-                        }
-                        tempFile.setUri(source.getUriList()[i]);
-                        filesToTransfer.add(tempFile);
-                    }
-                    transfer.setFilesToTransfer(filesToTransfer);
-                    return transfer.blockingStart(TRANSFER_SLICE_SIZE);
-                })
-                .subscribeOn(Schedulers.elastic())
-                .then();
+            .flatMap(token -> {
+                TransferJobRequest.Source source = request.getSource();
+                TransferJobRequest.Destination destination = request.getDestination();
+                Mono<Resource> sourceResourceMono = getEndpointCredential(token, source.getType(), source.getCredId())
+                        .map(credential -> createResource(credential, source.getType()));
+                Mono<Resource> destResourceMono = getEndpointCredential(token, destination.getType(), destination.getCredId())
+                        .map(credential -> createResource(credential, destination.getType()));
+                return sourceResourceMono.zipWith(destResourceMono, Transfer::new);
+            })
+            .doOnNext(transfer -> {
+                transfer.setFilesToTransfer(getFilesToTransfer(request.getSource()));
+                transfer.setDestinationBaseUri(request.getDestination().getBaseUrl());
+                transfer.setSourceBaseUri(request.getSource().getBaseUrl());
+                transfer.start(TRANSFER_SLICE_SIZE).subscribe();
+            })
+            .doOnSubscribe(s -> logger.info("Transfer submit initiated"))
+            .subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     /**
@@ -106,6 +117,4 @@ public class TransferService {
     public Mono<Void> cancel(UUID uuid) {
         return Mono.error(new Exception("Unsupported operation"));
     }
-
-
 }

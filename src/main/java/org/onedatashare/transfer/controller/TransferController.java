@@ -1,8 +1,13 @@
 package org.onedatashare.transfer.controller;
 
+import org.onedatashare.transfer.model.error.CredentialNotFoundException;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
 import org.onedatashare.transfer.service.TransferService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -12,6 +17,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/api/transfer")
 public class TransferController {
+    private static final Logger logger = LoggerFactory.getLogger(TransferController.class);
 
     @Autowired
     private TransferService resourceService;
@@ -25,4 +31,11 @@ public class TransferController {
     public Mono<Void> start(@RequestBody TransferJobRequest request) {
         return resourceService.submit(request);
     }
+
+    @ExceptionHandler(CredentialNotFoundException.class)
+    public ResponseEntity<String> handle(CredentialNotFoundException nfException) {
+        logger.error(nfException.toString());
+        return new ResponseEntity<>(nfException.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }
