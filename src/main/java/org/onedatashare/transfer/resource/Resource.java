@@ -1,9 +1,6 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.vfs2.FileSystemException;
 import org.onedatashare.transfer.model.core.IdMap;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.drain.Drain;

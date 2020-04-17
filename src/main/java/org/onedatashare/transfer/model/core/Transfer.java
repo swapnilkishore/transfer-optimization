@@ -9,7 +9,7 @@ import org.onedatashare.transfer.model.util.Progress;
 import org.onedatashare.transfer.model.util.Throughput;
 import org.onedatashare.transfer.model.util.Time;
 import org.onedatashare.transfer.model.util.TransferInfo;
-import org.onedatashare.transfer.module.Resource;
+import org.onedatashare.transfer.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
@@ -59,6 +59,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                     try {
                         tap = source.getTap(file, sourceBaseUri);
                     } catch (Exception e) {
+                        e.printStackTrace();
                         logger.error("Unable to read from the tap - " + e.getMessage());
                         return Flux.empty();
                     }

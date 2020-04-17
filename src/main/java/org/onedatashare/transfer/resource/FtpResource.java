@@ -1,15 +1,12 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import lombok.SneakyThrows;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemConfigBuilder;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
-import org.onedatashare.transfer.model.core.IdMap;
 import org.onedatashare.transfer.model.credential.AccountEndpointCredential;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
-import org.onedatashare.transfer.model.tap.Tap;
-import org.onedatashare.transfer.model.tap.VfsTap;
 
 public class FtpResource extends VfsResource {
     @SneakyThrows

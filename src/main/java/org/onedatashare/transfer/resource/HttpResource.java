@@ -1,4 +1,4 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 

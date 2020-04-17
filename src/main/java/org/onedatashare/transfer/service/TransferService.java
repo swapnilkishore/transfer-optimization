@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
-import org.onedatashare.transfer.module.*;
+import org.onedatashare.transfer.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import lombok.SneakyThrows;
 import org.apache.commons.vfs2.*;

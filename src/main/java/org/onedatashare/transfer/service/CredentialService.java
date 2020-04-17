@@ -5,11 +5,13 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.onedatashare.transfer.model.core.EndpointType;
 import org.onedatashare.transfer.model.credential.AccountEndpointCredential;
 import org.onedatashare.transfer.model.credential.OAuthEndpointCredential;
+import org.onedatashare.transfer.model.error.CredentialNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -46,8 +48,7 @@ public class CredentialService {
                 .uri(URI.create(String.format("%s/%s/%s",credentialServiceUrl, type, credId)))
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .onStatus(HttpStatus::is4xxClientError,
-                        response -> Mono.error(new Exception("May not be a connect to Credential Service")))
+                .onStatus(HttpStatus::is4xxClientError, response -> Mono.error(new CredentialNotFoundException()))
                 .onStatus(HttpStatus::is5xxServerError, response -> Mono.error(new Exception("Internal server error")));
     }
 

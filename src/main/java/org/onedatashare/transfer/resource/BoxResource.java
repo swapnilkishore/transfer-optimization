@@ -1,4 +1,4 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import org.onedatashare.transfer.model.core.IdMap;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
@@ -7,11 +7,11 @@ import org.onedatashare.transfer.model.tap.Tap;
 
 import java.io.UnsupportedEncodingException;
 
-import static org.onedatashare.transfer.model.core.ODSConstants.DRIVE_URI_SCHEME;
+import static org.onedatashare.transfer.model.core.ODSConstants.BOX_URI_SCHEME;
 
-public class GDriveResource extends Resource {
-    public GDriveResource(EndpointCredential cred) {
-        super(cred);
+public class BoxResource extends Resource {
+    public BoxResource(EndpointCredential credential) {
+        super(credential);
     }
 
     @Override
@@ -24,11 +24,12 @@ public class GDriveResource extends Resource {
         return null;
     }
 
+
     @Override
     public String pathFromUri(String uri) throws UnsupportedEncodingException {
         String path = "";
-        if(uri.contains(DRIVE_URI_SCHEME)){
-            path = uri.substring(DRIVE_URI_SCHEME.length() - 1);
+        if(uri.contains(BOX_URI_SCHEME)){
+            path = uri.substring(BOX_URI_SCHEME.length() - 1);
         }
         path = java.net.URLDecoder.decode(path, "UTF-8");
         return path;

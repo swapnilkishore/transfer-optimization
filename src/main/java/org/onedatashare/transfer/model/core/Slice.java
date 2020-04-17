@@ -2,7 +2,7 @@ package org.onedatashare.transfer.model.core;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import org.onedatashare.transfer.module.Resource;
+import org.onedatashare.transfer.resource.Resource;
 
 import java.nio.ByteBuffer;
 

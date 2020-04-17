@@ -1,4 +1,4 @@
-package org.onedatashare.transfer.module;
+package org.onedatashare.transfer.resource;
 
 import org.apache.commons.vfs2.*;
 import org.onedatashare.transfer.model.core.IdMap;
