@@ -13,6 +13,15 @@ import java.util.List;
 
 import static org.onedatashare.transfer.model.core.ODSConstants.BOX_URI_SCHEME;
 
+/**
+ * @README
+ * @Author Javier Falca
+ * Box Chunked Upload has some cryptic properties that are not too well documented
+ * 1.) To perform a chunked upload, a file must be greater than 20MB, any less will have to be
+ * sent as a single chunk with a different function.
+ * 2.) Each chunk must be exactly 8MB in size, if this number is not met, the chunk will fail to upload.
+ * 3.) A SHA-1 Base64 hash of the entire file must be provided at the end of the finish state during the commit.
+ */
 public class BoxDrain implements Drain {
     ByteArrayOutputStream chunk = new ByteArrayOutputStream();
     long totalSize = 0;
@@ -20,7 +29,7 @@ public class BoxDrain implements Drain {
     int part_size;
     String fileName;
 
-    String drainPath ;//= getPath();
+    String drainPath;
     Boolean isDirTransfer = false;
 
 

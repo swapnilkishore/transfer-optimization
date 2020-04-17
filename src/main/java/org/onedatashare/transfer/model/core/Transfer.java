@@ -60,14 +60,15 @@ public class Transfer<S extends Resource, D extends Resource> {
                         tap = source.getTap(file, sourceBaseUri);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        logger.error("Unable to read from the tap - " + e.getMessage());
+                        logger.error(file + "Unable to read from the tap - " + e.getMessage());
                         return Flux.empty();
                     }
                     Drain drain;
                     try {
                         drain = destination.getDrain(file, destinationBaseUri);
                     } catch (Exception e) {
-                        logger.error("Unable to create a new file drain - " + e.getMessage());
+                        logger.error(file + "Unable to create a new file drain - " + e.getMessage());
+                        e.printStackTrace();
                         return Flux.empty();
                     }
                     Drain finalDrain = drain;

@@ -10,6 +10,8 @@ import java.io.UnsupportedEncodingException;
 import static org.onedatashare.transfer.model.core.ODSConstants.DRIVE_URI_SCHEME;
 
 public class GDriveResource extends Resource {
+    public static final String ROOT_DIR_ID = "root";
+
     public GDriveResource(EndpointCredential cred) {
         super(cred);
     }
