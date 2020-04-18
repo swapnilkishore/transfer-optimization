@@ -95,6 +95,7 @@ public class TransferService {
                 return sourceResourceMono.zipWith(destinationResourceMono, Transfer::new);
             })
             .doOnNext(transfer -> {
+                transfer.setId(request.getId());
                 transfer.setSourceInfo(request.getSource().getInfo());
                 transfer.setDestinationInfo(request.getDestination().getInfo());
                 transfer.setFilesToTransfer(getFilesToTransfer(request.getSource()));
