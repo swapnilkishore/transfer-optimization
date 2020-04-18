@@ -24,25 +24,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 @NoArgsConstructor
 @Data
 public class Transfer<S extends Resource, D extends Resource> {
-    public S source;
-    public D destination;
-    public List<IdMap> filesToTransfer;
-    public TransferOptions options;
-    public String sourceBaseUri;
-    public String destinationBaseUri;
+    private S source;
+    private D destination;
+    private List<EntityInfo> filesToTransfer;
+    private TransferOptions options;
+    private EntityInfo sourceInfo;
+    private EntityInfo destinationInfo;
 
-    public AtomicInteger concurrency = new AtomicInteger(5);
+    private AtomicInteger concurrency = new AtomicInteger(5);
 
     private ArrayList<Disposable> disposableArrayList = new ArrayList<>();
     private static final Logger logger = LoggerFactory.getLogger(Transfer.class);
 
     /** Periodically updated information about the ongoing transfer. */
-    public final TransferInfo info = new TransferInfo();
+    private final TransferInfo info = new TransferInfo();
 
     // Timer counts 0.0 for files with very small size
-    protected Time timer;
-    protected Progress progress = new Progress();
-    protected Throughput throughput = new Throughput();
+    private Time timer;
+    private Progress progress = new Progress();
+    private Throughput throughput = new Throughput();
 
     public Transfer(S source, D destination){
         this.source = source;
@@ -54,10 +54,10 @@ public class Transfer<S extends Resource, D extends Resource> {
         return Flux.fromIterable(filesToTransfer)
                 .doOnSubscribe(s -> logger.info("Transfer started...."))
                 .flatMap(file -> {
-                    logger.info("Transferring " + file.getUri());
+                    logger.info("Transferring " + file.getPath());
                     Tap tap;
                     try {
-                        tap = source.getTap(file, sourceBaseUri);
+                        tap = source.getTap(sourceInfo, file);
                     } catch (Exception e) {
                         e.printStackTrace();
                         logger.error(file + "Unable to read from the tap - " + e.getMessage());
@@ -65,7 +65,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                     }
                     Drain drain;
                     try {
-                        drain = destination.getDrain(file, destinationBaseUri);
+                        drain = destination.getDrain(destinationInfo, file);
                     } catch (Exception e) {
                         logger.error(file + "Unable to create a new file drain - " + e.getMessage());
                         e.printStackTrace();

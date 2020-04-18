@@ -1,9 +1,10 @@
 package org.onedatashare.transfer.model.core;
 
 import lombok.Data;
+import lombok.NonNull;
 
 @Data
-public class IdMap {
+public class EntityInfo {
     private String id;
-    private String uri;
+    private String path;
 }

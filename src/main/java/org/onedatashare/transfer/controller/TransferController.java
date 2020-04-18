@@ -20,7 +20,7 @@ public class TransferController {
     private static final Logger logger = LoggerFactory.getLogger(TransferController.class);
 
     @Autowired
-    private TransferService resourceService;
+    private TransferService transferService;
 
     /**
      * Handler for POST requests of transfers
@@ -29,7 +29,7 @@ public class TransferController {
      */
     @PostMapping
     public Mono<Void> start(@RequestBody TransferJobRequest request) {
-        return resourceService.submit(request);
+        return transferService.submit(request);
     }
 
     @ExceptionHandler(CredentialNotFoundException.class)

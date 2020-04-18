@@ -1,7 +1,6 @@
 package org.onedatashare.transfer.model.tap;
 
 import com.box.sdk.*;
-import com.box.sdk.http.HttpMethod;
 import org.apache.commons.io.IOUtils;
 import org.onedatashare.transfer.model.core.Slice;
 import reactor.core.publisher.Flux;
@@ -9,19 +8,16 @@ import reactor.core.publisher.Flux;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
-public class BoxTap implements Tap {
-    long size;
-    BoxAPIRequest req;
+public final class BoxTap implements Tap {
+    private long size;
+    private BoxAPIRequest request;
 
     private BoxTap(){}
 
-    public static BoxTap initialize(BoxAPIConnection connection, String id, long size){
+    public static BoxTap initialize(BoxAPIRequest request, long size){
         BoxTap boxTap = new BoxTap();
-        BoxFile file = new BoxFile(connection, id);
-        URL downloadUrl = file.getDownloadURL();
-        boxTap.req = new BoxAPIRequest(connection, downloadUrl, HttpMethod.GET);
+        boxTap.request = request;
         boxTap.size = size;
         return boxTap;
     }
@@ -36,8 +32,8 @@ public class BoxTap implements Tap {
     @Override
     public Flux<Slice> openTap(int sliceSize) {
         int sizeInt = Math.toIntExact(size);
-        BoxAPIResponse resp = req.send();
-        InputStream inputStream = resp.getBody();
+        BoxAPIResponse response = request.send();
+        InputStream inputStream = response.getBody();
         return Flux.generate(
                 () -> 0,
                 (state, sink) -> {

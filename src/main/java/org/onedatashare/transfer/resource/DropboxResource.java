@@ -3,16 +3,14 @@ package org.onedatashare.transfer.resource;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.DbxUserFilesRequests;
-import com.dropbox.core.v2.files.DownloadBuilder;
 import com.dropbox.core.v2.files.FileMetadata;
-import org.onedatashare.transfer.model.core.IdMap;
+import org.onedatashare.transfer.model.core.EntityInfo;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.credential.OAuthEndpointCredential;
 import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.drain.DropboxDrain;
 import org.onedatashare.transfer.model.tap.DropboxTap;
 import org.onedatashare.transfer.model.tap.Tap;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.UnsupportedEncodingException;
 
@@ -31,8 +29,8 @@ public class DropboxResource extends Resource {
     }
 
     @Override
-    public Tap getTap(IdMap idMap, String baseUrl) throws Exception {
-        String url = this.pathFromUri(baseUrl + idMap.getUri());
+    public Tap getTap(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
+        String url = this.pathFromUri(baseInfo.getPath() + relativeInfo.getPath());
         DbxUserFilesRequests requests = this.client.files();
         FileMetadata metaData = (FileMetadata) requests.getMetadata(url);
         long size = metaData.getSize();
@@ -40,8 +38,8 @@ public class DropboxResource extends Resource {
     }
 
     @Override
-    public Drain getDrain(IdMap idMap, String baseUrl) throws Exception {
-        String url = this.pathFromUri(baseUrl + idMap.getUri());
+    public Drain getDrain(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
+        String url = this.pathFromUri(baseInfo.getPath() + relativeInfo.getPath());
         DbxUserFilesRequests requests = this.client.files();
         return DropboxDrain.initialize(url, requests);
     }

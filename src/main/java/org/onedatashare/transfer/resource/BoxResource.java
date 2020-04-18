@@ -1,31 +1,43 @@
 package org.onedatashare.transfer.resource;
 
 import com.box.sdk.BoxAPIConnection;
-import org.onedatashare.transfer.model.core.IdMap;
+import com.box.sdk.BoxAPIRequest;
+import com.box.sdk.BoxFile;
+import com.box.sdk.http.HttpMethod;
+import org.onedatashare.transfer.model.core.EntityInfo;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
+import org.onedatashare.transfer.model.credential.OAuthEndpointCredential;
 import org.onedatashare.transfer.model.drain.Drain;
+import org.onedatashare.transfer.model.tap.BoxTap;
 import org.onedatashare.transfer.model.tap.Tap;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import java.net.URL;
 import java.util.HashMap;
 
 import static org.onedatashare.transfer.model.core.ODSConstants.BOX_URI_SCHEME;
 
-public class BoxResource extends Resource {
+public final class BoxResource extends Resource {
     BoxAPIConnection client;
+
     public BoxResource(EndpointCredential credential) {
         super(credential);
+        client = new BoxAPIConnection(((OAuthEndpointCredential) credential).getToken());
     }
+
     private transient HashMap<String, String> pathParentMap = new HashMap<>();
 
     @Override
-    public Tap getTap(IdMap idMap, String baseUrl) throws Exception {
-        return null;
+    public Tap getTap(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
+        BoxFile file = new BoxFile(client, relativeInfo.getId());
+        URL downloadUrl = file.getDownloadURL();
+        long size = file.getInfo().getSize();
+        BoxAPIRequest request = new BoxAPIRequest(client, downloadUrl, HttpMethod.GET);
+        return BoxTap.initialize(request, size);
     }
 
     @Override
-    public Drain getDrain(IdMap idMap, String baseUrl) throws Exception {
+    public Drain getDrain(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
         return null;
     }
 

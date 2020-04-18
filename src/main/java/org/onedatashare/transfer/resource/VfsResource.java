@@ -1,7 +1,7 @@
 package org.onedatashare.transfer.resource;
 
 import org.apache.commons.vfs2.*;
-import org.onedatashare.transfer.model.core.IdMap;
+import org.onedatashare.transfer.model.core.EntityInfo;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.drain.VfsDrain;
@@ -17,10 +17,9 @@ public class VfsResource extends Resource {
         this.credential = credential;
     }
 
-
     @Override
-    public Tap getTap(IdMap idMap, String baseUrl) throws Exception{
-        FileObject fileObject = fileSystemManager.resolveFile(baseUrl + idMap.getUri());
+    public Tap getTap(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
+        FileObject fileObject = fileSystemManager.resolveFile(baseInfo.getPath() + relativeInfo.getPath());
         if(fileObject.isFile() != true){
             throw new NotAFileException();
         }
@@ -30,8 +29,8 @@ public class VfsResource extends Resource {
     }
 
     @Override
-    public Drain getDrain(IdMap idMap, String baseUrl) throws Exception {
-        FileObject fileObject = fileSystemManager.resolveFile(baseUrl + idMap.getUri(), fileSystemOptions);
+    public Drain getDrain(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
+        FileObject fileObject = fileSystemManager.resolveFile(baseInfo.getPath() + relativeInfo.getPath(), fileSystemOptions);
         //Creates the required folders and file
         fileObject.createFile();
         return VfsDrain.initialize(fileObject.getContent().getOutputStream());

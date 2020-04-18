@@ -1,6 +1,6 @@
 package org.onedatashare.transfer.resource;
 
-import org.onedatashare.transfer.model.core.IdMap;
+import org.onedatashare.transfer.model.core.EntityInfo;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.tap.Tap;
@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
 
 import static org.onedatashare.transfer.model.core.ODSConstants.DRIVE_URI_SCHEME;
 
-public class GDriveResource extends Resource {
+public final class GDriveResource extends Resource {
     public static final String ROOT_DIR_ID = "root";
 
     public GDriveResource(EndpointCredential cred) {
@@ -17,12 +17,12 @@ public class GDriveResource extends Resource {
     }
 
     @Override
-    public Tap getTap(IdMap idMap, String baseUrl) throws Exception {
+    public Tap getTap(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
         return null;
     }
 
     @Override
-    public Drain getDrain(IdMap idMap, String baseUrl) throws Exception {
+    public Drain getDrain(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
         return null;
     }
 

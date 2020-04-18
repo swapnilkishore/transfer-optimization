@@ -69,14 +69,14 @@ public class TransferService {
                 });
     }
 
-    private ArrayList<IdMap> getFilesToTransfer(TransferJobRequest.Source source){
-        ArrayList<IdMap> filesToTransfer = new ArrayList<>(source.getUrlList().length);
-        for(int i = 0; i < source.getUrlList().length; i++){
-            IdMap tempFile = new IdMap();
+    private ArrayList<EntityInfo> getFilesToTransfer(TransferJobRequest.Source source){
+        ArrayList<EntityInfo> filesToTransfer = new ArrayList<>(source.getPathList().length);
+        for(int i = 0; i < source.getPathList().length; i++){
+            EntityInfo tempFile = new EntityInfo();
             if(source.getIdList() != null) {
                 tempFile.setId(source.getIdList()[i]);
             }
-            tempFile.setUri(source.getUrlList()[i]);
+            tempFile.setPath(source.getPathList()[i]);
             filesToTransfer.add(tempFile);
         }
         return filesToTransfer;
@@ -90,14 +90,14 @@ public class TransferService {
                 TransferJobRequest.Destination destination = request.getDestination();
                 Mono<Resource> sourceResourceMono = getEndpointCredential(token, source.getType(), source.getCredId())
                         .map(credential -> createResource(credential, source.getType()));
-                Mono<Resource> destResourceMono = getEndpointCredential(token, destination.getType(), destination.getCredId())
+                Mono<Resource> destinationResourceMono = getEndpointCredential(token, destination.getType(), destination.getCredId())
                         .map(credential -> createResource(credential, destination.getType()));
-                return sourceResourceMono.zipWith(destResourceMono, Transfer::new);
+                return sourceResourceMono.zipWith(destinationResourceMono, Transfer::new);
             })
             .doOnNext(transfer -> {
+                transfer.setSourceInfo(request.getSource().getInfo());
+                transfer.setDestinationInfo(request.getDestination().getInfo());
                 transfer.setFilesToTransfer(getFilesToTransfer(request.getSource()));
-                transfer.setDestinationBaseUri(request.getDestination().getBaseUrl());
-                transfer.setSourceBaseUri(request.getSource().getBaseUrl());
                 transfer.start(TRANSFER_SLICE_SIZE).subscribe();
             })
             .doOnSubscribe(s -> logger.info("Transfer submit initiated"))

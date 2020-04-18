@@ -3,8 +3,7 @@ package org.onedatashare.transfer.model.request;
 import lombok.Data;
 import lombok.NonNull;
 import org.onedatashare.transfer.model.core.EndpointType;
-
-import java.util.ArrayList;
+import org.onedatashare.transfer.model.core.EntityInfo;
 
 @Data
 public class TransferJobRequest {
@@ -13,17 +12,20 @@ public class TransferJobRequest {
     @NonNull private Destination destination;
     private TransferOptions options;
 
+
     @Data
     public static class Destination {
-        protected EndpointType type;
-        protected String credId;
-        protected String baseId;
-        protected String baseUrl;
+        @NonNull private EndpointType type;
+        @NonNull private String credId;
+        private EntityInfo info;
     }
 
     @Data
-    public static class Source extends Destination {
+    public static class Source {
+        @NonNull private EndpointType type;
+        @NonNull private String credId;
+        @NonNull private EntityInfo info;
+        @NonNull private String[] pathList;
         private String[] idList;
-        private String[] urlList;
     }
 }
