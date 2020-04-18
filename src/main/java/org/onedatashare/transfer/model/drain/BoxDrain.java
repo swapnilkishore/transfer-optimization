@@ -68,24 +68,32 @@ public final class BoxDrain implements Drain {
     @Override
     public void drain(Slice slice) throws Exception {
         //Direct upload
-        if(!this.isChunkedUpload) {
+        if (!this.isChunkedUpload) {
             this.byteArrayBuilder.write(slice.asBytes());
         }
         //Chunked upload
-        else{
+        else {
             this.remainderBytes = this.remainderBytes != null ?
                     Bytes.concat(this.remainderBytes, slice.asBytes()) : slice.asBytes();
             int offset;
-            for(offset = 0; offset + this.partSize <= this.remainderBytes.length; offset += this.partSize){
+            for (offset = 0; offset + this.partSize <= this.remainderBytes.length; offset += this.partSize) {
                 //Copy part size bytes in a new byte array
                 byte[] partByte = Arrays.copyOfRange(this.remainderBytes, offset, offset + this.partSize);
                 BoxFileUploadSessionPart part = this.session.uploadPart(partByte, this.uploadedSoFar, this.partSize,
                         this.size);
                 this.parts.add(part);
+                this.uploadedSoFar += partByte.length;
                 this.messageDigest.update(partByte);
             }
-            if(this.remainderBytes.length % this.partSize != 0){
-                this.remainderBytes = Arrays.copyOfRange(this.remainderBytes, offset, this.remainderBytes.length);
+            if (offset > 0) {
+                //Some data is still left
+                if (this.remainderBytes.length % this.partSize != 0) {
+                    this.remainderBytes = Arrays.copyOfRange(this.remainderBytes, offset, this.remainderBytes.length);
+                }
+                //All the data was transferred
+                else {
+                    this.remainderBytes = null;
+                }
             }
         }
     }
@@ -107,7 +115,6 @@ public final class BoxDrain implements Drain {
                 this.uploadedSoFar += this.remainderBytes.length;
                 messageDigest.update(this.remainderBytes);
             }
-
             //Base64 encoding of the hash
             String digest = Base64.getEncoder().encodeToString(messageDigest.digest());
             //TODO: check out attributes that handles other cases like file present
