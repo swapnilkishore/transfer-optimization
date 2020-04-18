@@ -8,10 +8,12 @@ import com.box.sdk.http.HttpMethod;
 import org.onedatashare.transfer.model.core.EntityInfo;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.credential.OAuthEndpointCredential;
+import org.onedatashare.transfer.model.drain.BoxDrain;
 import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.tap.BoxTap;
 import org.onedatashare.transfer.model.tap.Tap;
 
+import javax.swing.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ public final class BoxResource extends Resource {
     private BoxAPIConnection client;
     private HashMap<String, String> pathIdMap;
 
+    private static final String ROOT_ID = "0";
     public BoxResource(EndpointCredential credential) {
         super(credential);
         this.client = new BoxAPIConnection(((OAuthEndpointCredential) credential).getToken());
@@ -30,24 +33,26 @@ public final class BoxResource extends Resource {
     }
 
     /**
-     * Creates box folders recursively and saves it in the pathIdMap. This has to be synchronized to avoid creating
+     * Creates box folders recursively if parent is not present and saves it in the pathIdMap. This has to be
+     * synchronized to avoid creating
      * multipe folders with same name (which might lead to error for box). Using concurrent hashmap may not be a good
      * option as the computeIfAbsent function will be called recursively
      * @param path : Path to be created
      * @return id of the newly created path
      */
-    private synchronized String createFolderRecursively(String path){
-        String finalId = null;
+    //TODO: add code to check if a sub folder already exists (this case not handled currently)
+    private synchronized String getParentId(final String parentId, final String path){
+        String lastParentId = parentId;
         for(int index = path.indexOf("/"); index != -1; index = path.indexOf("/", index + 1)){
             String tempPath = path.substring(0, index + 1);
-            String tempPathId = pathIdMap.get(tempPath);
+            String tempPathId = this.pathIdMap.get(tempPath);
             if(tempPathId == null){
-                tempPathId = String.valueOf(tempPath.hashCode());
-                pathIdMap.put(tempPath, tempPathId);
+                tempPathId = new BoxFolder(this.client, lastParentId).getID();
+                this.pathIdMap.put(tempPath, tempPathId);
             }
-            finalId = tempPathId;
+            lastParentId = tempPathId;
         }
-        return finalId;
+        return lastParentId;
     }
 
 
@@ -62,7 +67,22 @@ public final class BoxResource extends Resource {
 
     @Override
     public Drain getDrain(EntityInfo baseInfo, EntityInfo relativeInfo) throws Exception {
-        return null;
+        String filePath = this.pathFromUri(baseInfo.getPath() + relativeInfo.getPath());
+        BoxFolder folder;
+//        if(this.pathFromUri(baseInfo.getPath()).equals("/")){
+//            folder = BoxFolder.getRootFolder(client);
+//        } else {
+//            String parentId = this.getParentId(baseInfo.getId(), relativeInfo.getPath());
+//            folder = new BoxFolder(client, parentId);
+//        }
+        //Added for dev
+        folder = BoxFolder.getRootFolder(client);
+        String fileName = filePath;
+        int lastIndexOfSlash = fileName.lastIndexOf("/");
+        if(lastIndexOfSlash != -1){
+            fileName = fileName.substring(lastIndexOfSlash + 1);
+        }
+        return BoxDrain.getInstance(folder, fileName, 1<<10);
     }
 
     @Override

@@ -1,14 +1,10 @@
 package org.onedatashare.transfer.model.drain;
 
 import com.box.sdk.*;
+import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import org.onedatashare.transfer.model.core.Slice;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
 
 /**
  * @README
@@ -21,93 +17,35 @@ import java.util.List;
  */
 public final class BoxDrain implements Drain {
     private String name;
-    private String id;
-    private BoxAPIConnection connection;
-
-    private ByteArrayOutputStream chunk = new ByteArrayOutputStream();
-    private long size = 0, sizeUploaded = 0;
-    private int part_size;
-
-    private BoxFileUploadSession.Info sessionInfo;
-    private BoxFileUploadSession session;
-
-    private MessageDigest sha1;
-    private List<BoxFileUploadSessionPart> parts;
-    private ByteArrayInputStream smallFileStream;
+    private long size;
+    private BoxFolder folder;
+    private ByteArrayBuilder byteArrayBuilder;
     private boolean isSmall;
 
-    private static final long THRESHOLD = 20971520;
+    private static final long SINGLE_UPLOAD_THRESHOLD = 20L<<20;
+    private static final long CHUNKED_UPLOAD_SIZE = 8L<<20;
 
     private BoxDrain(){}
 
-    private static BoxDrain getInstance(String fileName, long size) throws Exception{
+    public static BoxDrain getInstance(BoxFolder boxFolder, String fileName, long size) throws Exception{
         BoxDrain boxDrain = new BoxDrain();
-        boxDrain.isSmall = (size < THRESHOLD) ? true : false;
-        boxDrain.size = size;
-        boxDrain.sha1 = MessageDigest.getInstance("SHA-1");
+        boxDrain.isSmall = size < SINGLE_UPLOAD_THRESHOLD;
         boxDrain.name = fileName;
-        BoxFolder folder = new BoxFolder(boxDrain.connection, boxDrain.id);
-        if(!boxDrain.isSmall) {
-            boxDrain.sessionInfo = folder.createUploadSession(boxDrain.name, boxDrain.size);
-            boxDrain.parts = new ArrayList<>();
-            boxDrain.session = boxDrain.sessionInfo.getResource();
-        }
-        return null;
+        boxDrain.size = size;
+        boxDrain.folder = boxFolder;
+        boxDrain.folder.canUpload(boxDrain.name, boxDrain.size);
+        boxDrain.byteArrayBuilder = new ByteArrayBuilder(Math.toIntExact(size));
+        return boxDrain;
     }
 
-
     @Override
-    public void drain(Slice slice) {
-        try {
-            //Box only allows chunked upload for files greater than 20MB at 8MB chunks
-            if (isSmall) {
-                chunk.write(slice.asBytes());
-            } else {
-                try {
-                    part_size = sessionInfo.getPartSize();
-                } catch(NullPointerException npe){
-
-                }
-                chunk.write(slice.asBytes());
-                if (chunk.size() == part_size) {
-                    try {
-                        BoxFileUploadSessionPart part = session.uploadPart(chunk.toByteArray(), sizeUploaded, chunk.size(), size);
-                        parts.add(part);
-                        sizeUploaded = sizeUploaded + chunk.size();
-                        sha1.update(chunk.toByteArray());
-                        chunk = new ByteArrayOutputStream();
-                    }catch(Exception e){
-                        //Part already exists
-                    }
-                }
-
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
+    public void drain(Slice slice) throws Exception {
+        byteArrayBuilder.write(slice.asBytes());
     }
 
-
     @Override
-    public void finish() throws Exception{
-        if (isSmall) {
-            BoxFolder folder = new BoxFolder(connection, id);
-            smallFileStream = new ByteArrayInputStream(chunk.toByteArray());
-            BoxFile.Info smallFile = folder.uploadFile(smallFileStream, name);
-            smallFileStream.close();
-        } else {
-            if (chunk.size() > 0) {
-                BoxFileUploadSessionPart part = session.uploadPart(chunk.toByteArray(), sizeUploaded, chunk.size(), size);
-                parts.add(part);
-                sizeUploaded = sizeUploaded + chunk.size();
-                sha1.update(chunk.toByteArray());
-            }
-
-            byte[] digestBytes = sha1.digest();
-            //Base64 encoding of the hash
-            String digestStr = Base64.getEncoder().encodeToString(digestBytes);
-            BoxFile.Info largeFile = session.commit(digestStr, parts, null, null, null);
-        }
+    public void finish() throws Exception {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(byteArrayBuilder.toByteArray());
+        this.folder.uploadFile(inputStream, this.name);
     }
 }

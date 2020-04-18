@@ -20,6 +20,7 @@ public class GoogleDriveDrain implements Drain {
 
     Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
 
+    private GoogleDriveDrain(){}
 //    @Override
     public GoogleDriveDrain start(String drainPath) {
         this.drainPath = drainPath;

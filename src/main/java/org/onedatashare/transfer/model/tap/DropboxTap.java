@@ -13,6 +13,8 @@ public final class DropboxTap implements Tap {
     DownloadBuilder downloadBuilder;
     long size;
 
+    private DropboxTap(){}
+
     public static DropboxTap initialize(String url , DbxUserFilesRequests requests, long size){
         DropboxTap dropboxTap = new DropboxTap();
         dropboxTap.downloadBuilder = requests.downloadBuilder(url);

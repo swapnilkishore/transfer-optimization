@@ -16,6 +16,8 @@ public class GoogleDriveTap implements Tap {
     Drive drive;
     com.google.api.client.http.HttpRequest httpRequestGet;
 
+    private GoogleDriveTap(){}
+
     public Flux<Slice> tap(Stat stat, long sliceSize) {
 
         String downloadUrl = "https://www.googleapis.com/drive/v3/files/"+stat.getId()+"?alt=media";
