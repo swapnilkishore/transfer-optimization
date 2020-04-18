@@ -10,7 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 
-public class DropboxDrain implements Drain {
+public final class DropboxDrain implements Drain {
     private String finalPath;
     private long uploaded;
     private InputStream in;

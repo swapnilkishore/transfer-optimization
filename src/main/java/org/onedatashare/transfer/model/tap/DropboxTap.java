@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class DropboxTap implements Tap {
+public final class DropboxTap implements Tap {
     DownloadBuilder downloadBuilder;
     long size;
 

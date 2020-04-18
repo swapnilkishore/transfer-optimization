@@ -4,8 +4,8 @@ import org.onedatashare.transfer.model.core.Slice;
 
 import java.io.OutputStream;
 
-public class VfsDrain implements Drain {
-    OutputStream outputStream;
+public final class VfsDrain implements Drain {
+    private OutputStream outputStream;
 
     private VfsDrain(){}
 

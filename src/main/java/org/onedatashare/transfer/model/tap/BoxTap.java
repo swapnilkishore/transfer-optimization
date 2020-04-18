@@ -6,7 +6,6 @@ import org.onedatashare.transfer.model.core.Slice;
 import reactor.core.publisher.Flux;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 public final class BoxTap implements Tap {
@@ -31,36 +30,24 @@ public final class BoxTap implements Tap {
      */
     @Override
     public Flux<Slice> openTap(int sliceSize) {
-        int sizeInt = Math.toIntExact(size);
-        BoxAPIResponse response = request.send();
+        BoxAPIResponse response = this.request.send();
         InputStream inputStream = response.getBody();
-        return Flux.generate(
-                () -> 0,
-                (state, sink) -> {
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    if (state + sliceSize < sizeInt) {
-                        try {
-                            IOUtils.copy(inputStream, outputStream);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        sink.next(new Slice(outputStream.toByteArray()));
-                        try {
-                            outputStream.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        try {
-                            IOUtils.copy(inputStream, outputStream);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        sink.next(new Slice(outputStream.toByteArray()));
-                        sink.complete();
-                    }
-                    return state + sliceSize;
-                });
+        return Flux.generate(() -> 0, (state, sink) -> {
+            try {
+                if (state + sliceSize < this.size) {
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream, sliceSize)));
+                }
+                else{
+                    int remaining = Math.toIntExact(size - state);
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream, remaining)));
+                    inputStream.close();
+                    sink.complete();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                sink.error(e);
+            }
+            return state + sliceSize;
+        });
     }
 }

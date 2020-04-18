@@ -1,12 +1,13 @@
 package org.onedatashare.transfer.model.tap;
 
+import org.apache.commons.io.IOUtils;
 import org.onedatashare.transfer.model.core.Slice;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class VfsTap implements Tap {
+public final class VfsTap implements Tap {
     private InputStream inputStream;
     private long size;
 
@@ -22,30 +23,18 @@ public class VfsTap implements Tap {
     @Override
     public Flux<Slice> openTap(int sliceSize) {
         return Flux.generate(() -> 0L, (state, sink) -> {
-            if (state + sliceSize < size) {
-                byte[] b = new byte[sliceSize];
-                try {
-                    // Fix for buggy PDF files - Else the PDF files are corrupted
-                    for(int offset = 0; offset < sliceSize; offset+=1)
-                        inputStream.read(b, offset, 1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                sink.next(new Slice(b));
-            } else {
-                int remaining = Math.toIntExact(size - state);
-                byte[] b = new byte[remaining];
-                try {
-                    // Fix for buggy PDF files - Else the PDF files are corrupted
-                    for(int offset = 0; offset < remaining; offset+=1)
-                        inputStream.read(b, offset, 1);
+            try {
+                if (state + sliceSize < this.size) {
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream, sliceSize)));
+                } else {
+                    int remaining = Math.toIntExact(size - state);
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream, remaining)));
                     inputStream.close();
-                    sink.next(new Slice(b));
                     sink.complete();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e){
+                sink.error(e);
+                e.printStackTrace();
             }
             return state + sliceSize;
         });

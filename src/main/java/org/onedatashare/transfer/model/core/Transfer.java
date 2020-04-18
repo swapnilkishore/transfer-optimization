@@ -74,7 +74,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                     Drain finalDrain = drain;
                     return tap.openTap(sliceSize)
                             .doOnNext(slice -> {
-                                logger.info("slice recieveds");
+                                logger.info(file.getPath() + " slice received");
                                 try {
                                     finalDrain.drain(slice);
                                 } catch (Exception e) {
@@ -83,6 +83,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                             })
                             .doOnComplete(() -> {
                                 try {
+                                    logger.info("Done transferring " + file.getPath());
                                     finalDrain.finish();
                                 } catch (Exception e) {
                                     e.printStackTrace();
