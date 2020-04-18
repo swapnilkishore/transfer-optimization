@@ -18,15 +18,13 @@ public class GoogleDriveDrain implements Drain {
     private String resumableSessionURL;
 
     private static final Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
-    private String token;
 
     private static final String UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
-    private static final String REQUEST_TYPE = "POST";
+
     private GoogleDriveDrain(){}
 
-
-//    @Override
-    public GoogleDriveDrain start() throws Exception{
+    public static GoogleDriveDrain initialize(String token) throws Exception{
+        GoogleDriveDrain driveDrain = new GoogleDriveDrain();
         try{
             URL url = new URL(UPLOAD_URL);
             HttpURLConnection request = (HttpURLConnection) url.openConnection();
@@ -36,7 +34,6 @@ public class GoogleDriveDrain implements Drain {
             request.setRequestProperty(HttpHeaders.AUTHORIZATION, "Bearer " + token);
             request.setRequestProperty(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
             String body = ""; //changed
-
             request.setRequestProperty(HttpHeaders.CONTENT_LENGTH, String.format(Locale.ENGLISH, "%d", body.getBytes().length));
 
             OutputStream outputStream = request.getOutputStream();
@@ -45,54 +42,50 @@ public class GoogleDriveDrain implements Drain {
             request.connect();
             int uploadRequestResponseCode  = request.getResponseCode();
             if(uploadRequestResponseCode == HttpURLConnection.HTTP_OK) {
-                resumableSessionURL = request.getHeaderField("location");
+                driveDrain.resumableSessionURL = request.getHeaderField("location");
             }else{
                 throw new Exception("Transfer will fail");
             }
         }catch (Exception e) {
             e.printStackTrace();
         }
-        return this;
+        return driveDrain;
     }
 
     @Override
-    public void drain(Slice slice) {
-        try{
-            chunk.write(slice.asBytes());
+    public void drain(Slice slice) throws Exception{
+        chunk.write(slice.asBytes());
 
-            // Google drive only supports 258KB (1 << 18) of data transfer per request
-            int chunks = chunk.size() / (1<<18);
-            int sizeUploading = chunks * (1<<18);
+        // Google drive only supports 258KB (1 << 18) of data transfer per request
+        int chunks = chunk.size() / (1<<18);
+        int sizeUploading = chunks * (1<<18);
 
-            URL url = new URL(resumableSessionURL);
-            if(sizeUploading > 0) {
-                HttpURLConnection request = (HttpURLConnection) url.openConnection();
-                request.setRequestMethod(RequestMethod.PUT.name());
-                request.setConnectTimeout(10000);
-                request.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Long.toString(sizeUploading));
-                request.setRequestProperty(HttpHeaders.CONTENT_RANGE,
-                        String.format("bytes %l-%l/*", size ,(size + sizeUploading - 1)));
-                request.setDoOutput(true);
-                OutputStream outputStream = request.getOutputStream();
-                outputStream.write(chunk.toByteArray(), 0, sizeUploading);
-                outputStream.close();
-                request.connect();
+        URL url = new URL(resumableSessionURL);
+        if(sizeUploading > 0) {
+            HttpURLConnection request = (HttpURLConnection) url.openConnection();
+            request.setRequestMethod(RequestMethod.PUT.name());
+            request.setConnectTimeout(10000);
+            request.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Long.toString(sizeUploading));
+            request.setRequestProperty(HttpHeaders.CONTENT_RANGE,
+                    String.format("bytes %l-%l/*", size ,(size + sizeUploading - 1)));
+            request.setDoOutput(true);
+            OutputStream outputStream = request.getOutputStream();
+            outputStream.write(chunk.toByteArray(), 0, sizeUploading);
+            outputStream.close();
+            request.connect();
 
-                if (request.getResponseCode() == 308) {
-                    size = size + sizeUploading;
-                    ByteArrayOutputStream temp = new ByteArrayOutputStream();
-                    temp.write(chunk.toByteArray(), sizeUploading, (chunk.size() - sizeUploading));
-                    chunk = temp;
-                } else if (request.getResponseCode() == HttpURLConnection.HTTP_OK || request.getResponseCode() == HttpURLConnection.HTTP_CREATED) {
-                        logger.debug("code: " + request.getResponseCode() +
-                                ", message: " + request.getResponseMessage());
-                } else {
-                        logger.debug("code: " + request.getResponseCode() +
-                                ", message: " + request.getResponseMessage());
-                }
+            if (request.getResponseCode() == 308) {
+                size = size + sizeUploading;
+                ByteArrayOutputStream temp = new ByteArrayOutputStream();
+                temp.write(chunk.toByteArray(), sizeUploading, (chunk.size() - sizeUploading));
+                chunk = temp;
+            } else if (request.getResponseCode() == HttpURLConnection.HTTP_OK || request.getResponseCode() == HttpURLConnection.HTTP_CREATED) {
+                logger.debug("code: " + request.getResponseCode() +
+                        ", message: " + request.getResponseMessage());
+            } else {
+                logger.debug("code: " + request.getResponseCode() +
+                        ", message: " + request.getResponseMessage());
             }
-        }catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

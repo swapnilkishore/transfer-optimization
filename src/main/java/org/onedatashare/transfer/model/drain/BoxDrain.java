@@ -21,6 +21,7 @@ import java.util.List;
  * 2.) Each chunk must be exactly 8MB in size, if this number is not met, the chunk will fail to upload.
  * 3.) A SHA-1 Base64 hash of the entire file must be provided at the end of the finish state during the commit.
  */
+//TODO: Check if it can be optimized
 public final class BoxDrain implements Drain {
     private String name;
     private long size;
