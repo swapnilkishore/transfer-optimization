@@ -82,7 +82,7 @@ public final class BoxResource extends Resource {
         if(lastIndexOfSlash != -1){
             fileName = fileName.substring(lastIndexOfSlash + 1);
         }
-        return BoxDrain.getInstance(folder, fileName, 1<<10);
+        return BoxDrain.getInstance(folder, fileName, 21295967);
     }
 
     @Override
