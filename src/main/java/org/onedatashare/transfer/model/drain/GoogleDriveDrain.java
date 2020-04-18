@@ -3,6 +3,8 @@ package org.onedatashare.transfer.model.drain;
 import org.onedatashare.transfer.model.core.Slice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -11,48 +13,34 @@ import java.net.URL;
 import java.util.Locale;
 
 public class GoogleDriveDrain implements Drain {
-    ByteArrayOutputStream chunk = new ByteArrayOutputStream();
-    long size = 0;
-    String resumableSessionURL;
+    private ByteArrayOutputStream chunk = new ByteArrayOutputStream();
+    private long size = 0;
+    private String resumableSessionURL;
 
-    String drainPath;// = getPath();
-    Boolean isDirTransfer = false;
+    private String drainPath;
+    private Boolean isDirTransfer = false;
 
-    Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
+    private static final Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
+    private String token;
 
+    private static final String UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
+    private static final String REQUEST_TYPE = "POST";
     private GoogleDriveDrain(){}
-//    @Override
-    public GoogleDriveDrain start(String drainPath) {
-        this.drainPath = drainPath;
-        this.isDirTransfer = true;
-        return start();
-    }
+
 
 //    @Override
-    public GoogleDriveDrain start() {
+    public GoogleDriveDrain start() throws Exception{
         try{
-            String name[] = drainPath.split("/");
-
-//            if(isDirTransfer)
-//                setId(mkdir(name));
-//            else
-//                setId( getSession().idMap.get(getSession().idMap.size()-1).getId() );
-
-            URL url = new URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable");
+            URL url = new URL(UPLOAD_URL);
             HttpURLConnection request = (HttpURLConnection) url.openConnection();
-            request.setRequestMethod("POST");
+            request.setRequestMethod(RequestMethod.POST.name());
             request.setDoInput(true);
             request.setDoOutput(true);
-//            request.setRequestProperty("Authorization", "Bearer " + ((OAuthCredential)(getSession().getCredential())).getToken());
-            request.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            request.setRequestProperty(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+            request.setRequestProperty(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
             String body = ""; //changed
-//            if(getId() !=null){
-//                body = "{\"name\": \"" + name[name.length-1] + "\", \"parents\": [\"" + getId() + "\"]}";
-//            }else{
-//                body = "{\"name\": \"" + name[name.length-1] + "\"}";
-//            }
 
-            request.setRequestProperty("Content-Length", String.format(Locale.ENGLISH, "%d", body.getBytes().length));
+            request.setRequestProperty(HttpHeaders.CONTENT_LENGTH, String.format(Locale.ENGLISH, "%d", body.getBytes().length));
 
             OutputStream outputStream = request.getOutputStream();
             outputStream.write(body.getBytes());
@@ -82,10 +70,11 @@ public class GoogleDriveDrain implements Drain {
             URL url = new URL(resumableSessionURL);
             if(sizeUploading > 0) {
                 HttpURLConnection request = (HttpURLConnection) url.openConnection();
-                request.setRequestMethod("PUT");
+                request.setRequestMethod(RequestMethod.PUT.name());
                 request.setConnectTimeout(10000);
-                request.setRequestProperty("Content-Length", Long.toString(sizeUploading));
-                request.setRequestProperty("Content-Range", "bytes " + size + "-" + (size + sizeUploading - 1) + "/" + "*");
+                request.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Long.toString(sizeUploading));
+                request.setRequestProperty(HttpHeaders.CONTENT_RANGE,
+                        String.format("bytes %l-%l/*", size ,(size + sizeUploading - 1)));
                 request.setDoOutput(true);
                 OutputStream outputStream = request.getOutputStream();
                 outputStream.write(chunk.toByteArray(), 0, sizeUploading);
