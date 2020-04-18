@@ -17,9 +17,6 @@ public class GoogleDriveDrain implements Drain {
     private long size = 0;
     private String resumableSessionURL;
 
-    private String drainPath;
-    private Boolean isDirTransfer = false;
-
     private static final Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
     private String token;
 
@@ -47,7 +44,7 @@ public class GoogleDriveDrain implements Drain {
             outputStream.close();
             request.connect();
             int uploadRequestResponseCode  = request.getResponseCode();
-            if(uploadRequestResponseCode == 200) {
+            if(uploadRequestResponseCode == HttpURLConnection.HTTP_OK) {
                 resumableSessionURL = request.getHeaderField("location");
             }else{
                 throw new Exception("Transfer will fail");
@@ -86,7 +83,7 @@ public class GoogleDriveDrain implements Drain {
                     ByteArrayOutputStream temp = new ByteArrayOutputStream();
                     temp.write(chunk.toByteArray(), sizeUploading, (chunk.size() - sizeUploading));
                     chunk = temp;
-                } else if (request.getResponseCode() == 200 || request.getResponseCode() == 201) {
+                } else if (request.getResponseCode() == HttpURLConnection.HTTP_OK || request.getResponseCode() == HttpURLConnection.HTTP_CREATED) {
                         logger.debug("code: " + request.getResponseCode() +
                                 ", message: " + request.getResponseMessage());
                 } else {
