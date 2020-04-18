@@ -1,73 +1,50 @@
 package org.onedatashare.transfer.model.tap;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.services.drive.Drive;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
 import org.apache.commons.io.IOUtils;
 import org.onedatashare.transfer.model.core.Slice;
-import org.onedatashare.transfer.model.core.Stat;
 import reactor.core.publisher.Flux;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-public class GoogleDriveTap implements Tap {
-    long size;
-    Drive drive;
-    com.google.api.client.http.HttpRequest httpRequestGet;
+public final class GoogleDriveTap implements Tap {
+    private long size;
+    private HttpRequest request;
 
     private GoogleDriveTap(){}
 
-    public Flux<Slice> tap(Stat stat, long sliceSize) {
-
-        String downloadUrl = "https://www.googleapis.com/drive/v3/files/"+stat.getId()+"?alt=media";
-        try {
-            httpRequestGet = drive.getRequestFactory().buildGetRequest(new GenericUrl(downloadUrl));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        size = stat.getSize();
-        return tap(sliceSize);
-    }
-
-    public Flux<Slice> tap(long sliceSize) {
-        return Flux.generate(
-                () -> 0L,
-                (state, sink) -> {
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    if (state + sliceSize < size) {
-                        try {
-                            httpRequestGet.getHeaders().setRange("bytes=" + state + "-" + (state + sliceSize - 1));
-                            com.google.api.client.http.HttpResponse response = httpRequestGet.execute();
-                            InputStream is = response.getContent();
-                            IOUtils.copy(is, outputStream);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        sink.next(new Slice(outputStream.toByteArray()));
-                        try {
-                            outputStream.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        try {
-                            httpRequestGet.getHeaders().setRange("bytes=" + state + "-" + (size - 1));
-                            com.google.api.client.http.HttpResponse response = httpRequestGet.execute();
-                            InputStream is = response.getContent();
-                            IOUtils.copy(is, outputStream);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        sink.next(new Slice(outputStream.toByteArray()));
-                        sink.complete();
-                    }
-                    return state + sliceSize;
-                });
+    public static GoogleDriveTap getInstance(HttpRequest request, long size){
+        GoogleDriveTap driveTap = new GoogleDriveTap();
+        driveTap.request = request;
+        driveTap.size = size;
+        return driveTap;
     }
 
     @Override
     public Flux<Slice> openTap(int sliceSize) {
-        return null;
+        return Flux.generate(() -> 0L, (state, sink) -> {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            try {
+                if (state + sliceSize < size) {
+                    request.getHeaders().setRange("bytes=" + state + "-" + (state + sliceSize - 1));
+                    HttpResponse response = request.execute();
+                    InputStream inputStream = response.getContent();
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream)));
+                    outputStream.close();
+                } else {
+                    request.getHeaders().setRange("bytes=" + state + "-" + (size - 1));
+                    HttpResponse response = request.execute();
+                    InputStream inputStream = response.getContent();
+                    sink.next(new Slice(IOUtils.toByteArray(inputStream)));
+                    sink.complete();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                sink.error(e);
+            }
+            return state + sliceSize;
+        });
     }
 }

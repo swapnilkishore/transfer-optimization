@@ -27,8 +27,6 @@ public class TransferService {
     @Autowired
     private CredentialService credentialService;
 
-    private ConcurrentHashMap<UUID, Disposable> ongoingJobs = new ConcurrentHashMap<>();
-
     private static final Logger logger = LoggerFactory.getLogger(TransferService.class);
 
     public Mono<? extends EndpointCredential> getEndpointCredential(String token, EndpointType type, String credId){
