@@ -11,13 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
-import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.onedatashare.transfer.model.core.ODSConstants.*;
 import static org.onedatashare.transfer.model.credential.CredentialConstants.*;
@@ -67,18 +64,6 @@ public class TransferService {
                 });
     }
 
-    private ArrayList<EntityInfo> getFilesToTransfer(TransferJobRequest.Source source){
-        ArrayList<EntityInfo> filesToTransfer = new ArrayList<>(source.getPathList().length);
-        for(int i = 0; i < source.getPathList().length; i++){
-            EntityInfo tempFile = new EntityInfo();
-            if(source.getIdList() != null) {
-                tempFile.setId(source.getIdList()[i]);
-            }
-            tempFile.setPath(source.getPathList()[i]);
-            filesToTransfer.add(tempFile);
-        }
-        return filesToTransfer;
-    }
 
     public Mono<Void> submit(TransferJobRequest request){
         logger.info("In submit Function");
@@ -96,7 +81,7 @@ public class TransferService {
                 transfer.setId(request.getId());
                 transfer.setSourceInfo(request.getSource().getInfo());
                 transfer.setDestinationInfo(request.getDestination().getInfo());
-                transfer.setFilesToTransfer(getFilesToTransfer(request.getSource()));
+                transfer.setFilesToTransfer(request.getSource().getInfoList());
                 transfer.start(TRANSFER_SLICE_SIZE).subscribe();
             })
             .doOnSubscribe(s -> logger.info("Transfer submit initiated"))

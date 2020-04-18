@@ -5,6 +5,8 @@ import lombok.NonNull;
 import org.onedatashare.transfer.model.core.EndpointType;
 import org.onedatashare.transfer.model.core.EntityInfo;
 
+import java.util.ArrayList;
+
 @Data
 public class TransferJobRequest {
     @NonNull private String id;
@@ -25,7 +27,6 @@ public class TransferJobRequest {
         @NonNull private EndpointType type;
         @NonNull private String credId;
         @NonNull private EntityInfo info;
-        @NonNull private String[] pathList;
-        private String[] idList;
+        @NonNull private ArrayList<EntityInfo> infoList;
     }
 }
