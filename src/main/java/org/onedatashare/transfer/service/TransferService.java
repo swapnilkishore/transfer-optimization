@@ -82,7 +82,7 @@ public class TransferService {
                 transfer.setSourceInfo(request.getSource().getInfo());
                 transfer.setDestinationInfo(request.getDestination().getInfo());
                 transfer.setFilesToTransfer(request.getSource().getInfoList());
-                transfer.start(TRANSFER_SLICE_SIZE).subscribe();
+                transfer.start(TRANSFER_SLICE_SIZE).subscribeOn(Schedulers.elastic()).subscribe();
             })
             .doOnSubscribe(s -> logger.info("Transfer submit initiated"))
             .subscribeOn(Schedulers.elastic())

@@ -58,6 +58,8 @@ public class Transfer<S extends Resource, D extends Resource> {
                     logger.info("Transfer started....");
                     this.startTime = Time.now();
                 })
+//                .parallel(2)
+//                .runOn(Schedulers.elastic())
                 .flatMap(file -> {
                     logger.info("Transferring " + file.getPath());
                     Tap tap;
@@ -79,6 +81,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                     Drain finalDrain = drain;
                     return tap.openTap(sliceSize)
                             .doOnNext(slice -> {
+
                                 logger.info(file.getPath() + " slice received");
                                 try {
                                     finalDrain.drain(slice);
@@ -93,9 +96,10 @@ public class Transfer<S extends Resource, D extends Resource> {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
-                            })
-                            .subscribeOn(Schedulers.elastic());
-                }).doOnComplete(() -> {
+                            });
+                })
+//                .sequential()
+                .doOnComplete(() -> {
                     this.startTime = Time.now() - this.startTime;
                     logger.info("Done transferring " + this.id + ". Took "+ startTime/1000 + " secs");
                 });
