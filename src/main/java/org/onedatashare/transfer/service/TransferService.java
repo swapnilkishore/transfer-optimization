@@ -1,6 +1,8 @@
 package org.onedatashare.transfer.service;
 
 import lombok.SneakyThrows;
+import org.onedatashare.transfer.model.TransferDetails;
+import org.onedatashare.transfer.model.TransferDetailsRepository;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
@@ -12,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -26,6 +29,9 @@ import static org.onedatashare.transfer.model.credential.CredentialConstants.*;
 public class TransferService {
     @Autowired
     private CredentialService credentialService;
+
+    @Autowired
+    private static TransferDetailsRepository repository;
 
     private ConcurrentHashMap<UUID, Disposable> ongoingJobs = new ConcurrentHashMap<>();
 
@@ -84,6 +90,8 @@ public class TransferService {
 
     public Mono<Void> submit(TransferJobRequest request){
         logger.info("In submit Function");
+        //TransferDetails details = new TransferDetails("test", 2l);
+       // repository.saveAll(Flux.just(details)).subscribe();
         return getUserCredFromRequest()
             .flatMap(token -> {
                 TransferJobRequest.Source source = request.getSource();
@@ -103,6 +111,14 @@ public class TransferService {
             .doOnSubscribe(s -> logger.info("Transfer submit initiated"))
             .subscribeOn(Schedulers.elastic())
             .then();
+    }
+
+    public static void savetoMongo()
+    {
+        logger.info("in savetomongo");
+        TransferDetails details = new TransferDetails("testfile", 2l);
+        repository.saveAll(Flux.just(details)).subscribe();
+        return;
     }
 
     /**

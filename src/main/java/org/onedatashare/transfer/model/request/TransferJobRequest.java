@@ -7,7 +7,7 @@ import org.onedatashare.transfer.model.core.EndpointType;
 import java.util.ArrayList;
 
 @Data
-public class TransferJobRequest {
+public class TransferJobRequest  {
     @NonNull private String id;
     @NonNull private Source source;
     @NonNull private Destination destination;

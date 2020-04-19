@@ -18,6 +18,7 @@ public class VfsDrain implements Drain {
     @Override
     public void drain(Slice slice) throws Exception{
         this.outputStream.write(slice.asBytes());
+
         this.outputStream.flush();
     }
 

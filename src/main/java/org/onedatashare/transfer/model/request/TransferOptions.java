@@ -2,8 +2,10 @@ package org.onedatashare.transfer.model.request;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class TransferOptions {
+public class TransferOptions implements Serializable {
     private Boolean compress;
     private Boolean encrypt;
     private String optimizer;

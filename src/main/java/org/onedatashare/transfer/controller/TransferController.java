@@ -1,5 +1,7 @@
 package org.onedatashare.transfer.controller;
 
+import org.onedatashare.transfer.model.TransferDetails;
+import org.onedatashare.transfer.model.TransferDetailsRepository;
 import org.onedatashare.transfer.model.error.CredentialNotFoundException;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
 import org.onedatashare.transfer.service.TransferService;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -21,6 +24,10 @@ public class TransferController {
 
     @Autowired
     private TransferService resourceService;
+
+//    @Autowired
+//    private static TransferDetailsRepository repository;
+
 
     /**
      * Handler for POST requests of transfers
