@@ -73,8 +73,8 @@ public class Transfer<S extends Resource, D extends Resource> {
                     logger.info("Transfer started....");
                     totalTransferTime = System.nanoTime();
                 })
-                //.parallel(4)
-                //.runOn(Schedulers.elastic())
+                .parallel(4)
+                .runOn(Schedulers.elastic())
                 .flatMap(file -> {
                     logger.info("Transferring " + file.getUri()+" "+Thread.currentThread().getName());
                     Tap tap;
@@ -118,7 +118,7 @@ public class Transfer<S extends Resource, D extends Resource> {
                                 })
                             .subscribeOn(Schedulers.elastic());
                 })
-             //   .sequential()
+                .sequential()
                 .doOnComplete(() -> {
                     logger.info("Done transferring");
                     totalTransferTime = System.nanoTime() - totalTransferTime;
