@@ -1,9 +1,14 @@
 package org.onedatashare.transfer.service;
 
 import lombok.SneakyThrows;
+import org.onedatashare.transfer.model.TransferDetails;
 import org.onedatashare.transfer.model.core.*;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
+import org.onedatashare.transfer.model.drain.Drain;
 import org.onedatashare.transfer.model.request.TransferJobRequest;
+import org.onedatashare.transfer.model.tap.Tap;
+import org.onedatashare.transfer.model.util.Time;
+import org.onedatashare.transfer.repository.TransferDetailsRepository;
 import org.onedatashare.transfer.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -23,6 +29,9 @@ import static org.onedatashare.transfer.model.credential.CredentialConstants.*;
 public class TransferService {
     @Autowired
     private CredentialService credentialService;
+
+//    @Autowired
+//    TransferDetailsRepository transferDetailsRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(TransferService.class);
 
@@ -67,6 +76,7 @@ public class TransferService {
 
     public Mono<Void> submit(TransferJobRequest request){
         logger.info("In submit Function");
+//        transferDetailsRepository.saveAll(Flux.just(new TransferDetails(Transfer.fName,12l))).subscribe();
         return getUserCredFromRequest()
             .flatMap(token -> {
                 TransferJobRequest.Source source = request.getSource();
@@ -87,6 +97,7 @@ public class TransferService {
             .doOnSubscribe(s -> logger.info("Transfer submit initiated"))
             .subscribeOn(Schedulers.elastic())
             .then();
+
     }
 
     /**
