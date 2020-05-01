@@ -142,7 +142,7 @@ public class Transfer<S extends Resource, D extends Resource> {
         totalSize /= 1024;
         totalSize /= 1024;
 
-        System.out.println("totalsize is -------------" + totalSize);
+        System.out.println("totalsize is :" + totalSize);
         if (totalSize >= 0.25 && totalSize <= 25)
             parallelism = 8;
         else if (totalSize >= 26 && totalSize <= 100)
