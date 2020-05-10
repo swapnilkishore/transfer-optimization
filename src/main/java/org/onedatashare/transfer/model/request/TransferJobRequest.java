@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 @Data
 public class TransferJobRequest {
+    private String ownerId;
     @NonNull private String id;
     @NonNull private Source source;
     @NonNull private Destination destination;

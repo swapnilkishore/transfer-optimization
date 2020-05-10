@@ -9,14 +9,14 @@ import reactor.core.publisher.Flux;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-public final class GoogleDriveTap implements Tap {
+public final class GDriveTap implements Tap {
     private long size;
     private HttpRequest request;
 
-    private GoogleDriveTap(){}
+    private GDriveTap(){}
 
-    public static GoogleDriveTap getInstance(HttpRequest request, long size){
-        GoogleDriveTap driveTap = new GoogleDriveTap();
+    public static GDriveTap initialize(HttpRequest request, long size){
+        GDriveTap driveTap = new GDriveTap();
         driveTap.request = request;
         driveTap.size = size;
         return driveTap;

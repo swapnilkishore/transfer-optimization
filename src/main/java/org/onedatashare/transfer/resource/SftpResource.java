@@ -9,7 +9,6 @@ import org.onedatashare.transfer.model.credential.AccountEndpointCredential;
 import org.onedatashare.transfer.model.credential.EndpointCredential;
 
 public class SftpResource extends VfsResource {
-
     @SneakyThrows
     public SftpResource(EndpointCredential credential) {
         super(credential);
@@ -24,5 +23,4 @@ public class SftpResource extends VfsResource {
         }
         this.fileSystemManager = VFS.getManager();
     }
-
 }

@@ -13,8 +13,8 @@ import org.onedatashare.transfer.resource.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+//import org.springframework.security.core.Authentication;
+//import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,12 +35,12 @@ public class TransferService {
 
     private static final Logger logger = LoggerFactory.getLogger(TransferService.class);
 
-    public Mono<? extends EndpointCredential> getEndpointCredential(String token, EndpointType type, String credId){
+    public Mono<? extends EndpointCredential> getEndpointCredential(String userId, EndpointType type, String credId){
         if(ACCOUNT_CRED_TYPE.contains(type)){
-            return credentialService.fetchAccountCredential(token, type, credId);
+            return credentialService.fetchAccountCredential(userId, type, credId);
         }
         else if(OAUTH_CRED_TYPE.contains(type)){
-            return credentialService.fetchOAuthCredential(token, type, credId);
+            return credentialService.fetchOAuthCredential(userId, type, credId);
         }
         return Mono.error(new Exception("Invalid endpoint type. Must either be AccountCred or OauthCred type"));
     }
@@ -65,25 +65,16 @@ public class TransferService {
         }
     }
 
-    private Mono<String> getUserCredFromRequest(){
-        return ReactiveSecurityContextHolder.getContext()
-                .map(s -> {
-                    Authentication authentication = s.getAuthentication();
-                    return (String) authentication.getCredentials();
-                });
-    }
-
-
     public Mono<Void> submit(TransferJobRequest request){
         logger.info("In submit Function");
 //        transferDetailsRepository.saveAll(Flux.just(new TransferDetails(Transfer.fName,12l))).subscribe();
-        return getUserCredFromRequest()
-            .flatMap(token -> {
+        return Mono.just(request.getOwnerId())
+            .flatMap(ownerId -> {
                 TransferJobRequest.Source source = request.getSource();
                 TransferJobRequest.Destination destination = request.getDestination();
-                Mono<Resource> sourceResourceMono = getEndpointCredential(token, source.getType(), source.getCredId())
+                Mono<Resource> sourceResourceMono = getEndpointCredential(ownerId, source.getType(), source.getCredId())
                         .map(credential -> createResource(credential, source.getType()));
-                Mono<Resource> destinationResourceMono = getEndpointCredential(token, destination.getType(), destination.getCredId())
+                Mono<Resource> destinationResourceMono = getEndpointCredential(ownerId, destination.getType(), destination.getCredId())
                         .map(credential -> createResource(credential, destination.getType()));
                 return sourceResourceMono.zipWith(destinationResourceMono, Transfer::new);
             })
