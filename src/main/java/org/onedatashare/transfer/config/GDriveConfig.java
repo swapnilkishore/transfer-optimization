@@ -1,99 +1,165 @@
-//package org.onedatashare.transfer.config;
-//
-//import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-//import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-//import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-//import com.google.api.client.http.HttpTransport;
-//import com.google.api.client.json.JsonFactory;
-//import com.google.api.client.json.jackson2.JacksonFactory;
-//import com.google.api.client.util.store.FileDataStoreFactory;
-//import com.google.api.services.drive.DriveScopes;
-//import lombok.Data;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.stereotype.Component;
-//
-//import javax.annotation.PostConstruct;
-//import java.io.File;
-//import java.io.IOException;
-//import java.util.Arrays;
-//import java.util.List;
-//
-//@Component
-//@Data
-//public class GDriveConfig {
-//
-//    @Value("${gdrive.authUri}")
-//    private String authUri;
-//
-//    @Value("${gdrive.tokenUri}")
-//    private String tokenUri;
-//
-//    @Value("${gdrive.authProviderUri}")
-//    private String authProviderX509CertUrl;
-//
-//    @Value("${gdrive.redirectUri}")
-//    private String redirectUri;
-//
-//    @Value("${gdrive.clientId}")
-//    private String clientId;
-//
-//    @Value("${gdrive.clientSecret}")
-//    private String clientSecret;
-//
-//    @Value("${gdrive.projectId}")
-//    private String projectId;
-//
-//    private GoogleClientSecrets driveClientSecrets;
-//    private GoogleAuthorizationCodeFlow flow;
-//
-//    private static final List<String> SCOPES = Arrays.asList(DriveScopes.DRIVE_READONLY);
-//    private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-//
-//    private static FileDataStoreFactory DATA_STORE_FACTORY;
-//    private static HttpTransport HTTP_TRANSPORT;
-//
-//    static {
-//        try{
-//            File DATA_STORE_DIR = new File(System.getProperty("user.home"), ".credentials/ods");
-//            DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
-//            HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    public static final HttpTransport getHttpTransport(){
-//        return HTTP_TRANSPORT;
-//    }
-//
-//    public static final JsonFactory getJsonFactory(){
-//        return JSON_FACTORY;
-//    }
-//
-//    public static final FileDataStoreFactory getDATA_STORE_FACTORY(){
-//        return DATA_STORE_FACTORY;
-//    }
-//
-//    @PostConstruct
-//    public void initialize() {
-//
-//        if (getClientId() != null || getClientSecret() != null || getTokenUri() != null || getRedirectUri() != null){
-//            GoogleClientSecrets.Details details = new GoogleClientSecrets.Details();
-//
-//            details.setAuthUri(authUri).setClientId(clientId)
-//                    .setClientSecret(clientSecret).setRedirectUris(Arrays.asList(redirectUri))
-//                    .setTokenUri(tokenUri);
-//            driveClientSecrets = new GoogleClientSecrets().setInstalled(details);
-//        }
-//
-//
-//        try {
-//            flow = new GoogleAuthorizationCodeFlow.Builder(
-//                    HTTP_TRANSPORT, JSON_FACTORY, driveClientSecrets, SCOPES)
-//                    .setDataStoreFactory(DATA_STORE_FACTORY)
-//                    .build();
-//        }catch(IOException e){
-//            e.printStackTrace();
-//        }
-//    }
-//}
+package org.onedatashare.transfer.config;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.drive.DriveScopes;
+import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ResourceBundle;
+
+@Configuration
+@Data
+public class GDriveConfig {
+    private static final Logger logger = LoggerFactory.getLogger(GDriveConfig.class);
+
+    @Value("${gdrive.appName}")
+    private String appName;
+    @Value("${gdrive.authUri}")
+    private String authUri;
+    @Value("${gdrive.tokenUri}")
+    private String tokenUri;
+    @Value("${gdrive.authProviderUri}")
+    private String authProviderX509CertUrl;
+    @Value("${gdrive.redirectUri}")
+    private String redirectUri;
+    @Value("${gdrive.clientId}")
+    private String clientId;
+    @Value("${gdrive.clientSecret}")
+    private String clientSecret;
+    @Value("${gdrive.projectId}")
+    private String projectId;
+
+    private GoogleClientSecrets clientSecrets;
+    private GoogleAuthorizationCodeFlow flow;
+
+
+    private final JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+    private HttpTransport httpTransport;
+
+    public final static List<String> SCOPES = Arrays.asList(DriveScopes.DRIVE_METADATA_READONLY, DriveScopes.DRIVE);
+    public final static String ACCESS_TYPE = "offline";
+    public final static String APPROVAL_PROMPT = "force";
+
+    private static String getValueFromResourceString(String str){
+
+        if(str == null){
+            return null;
+        }
+        //Env variable
+        else if(str.startsWith("$")){
+            if(str.endsWith("}")) {
+                str = str.substring(2, str.length() - 1);
+                return System.getenv(str);
+            }
+            else {
+                ResourceBundle resource = ResourceBundle.getBundle("application");
+                StringBuilder stringBuilder = new StringBuilder();
+                for (String s: str.split("}")){
+                    System.out.println("s");
+                }
+            }
+        }
+        //Just value
+        else{
+            return str;
+        }
+        return null;
+    }
+
+    private GDriveConfig(boolean b){
+        ResourceBundle resource = ResourceBundle.getBundle("application");
+        this.appName = getValueFromResourceString(resource.getString("gdrive.appName"));
+        this.authUri = getValueFromResourceString(resource.getString("gdrive.authUri"));
+        this.tokenUri = getValueFromResourceString(resource.getString("gdrive.tokenUri"));
+        this.authProviderX509CertUrl = getValueFromResourceString(resource.getString("gdrive.authUri"));
+        this.redirectUri = getValueFromResourceString(resource.getString("redirect.uri.string")) + "/api/oauth/gdrive";
+        this.clientId = getValueFromResourceString(resource.getString("gdrive.clientId"));
+        this.clientSecret = getValueFromResourceString(resource.getString("gdrive.clientSecret"));
+        this.projectId = getValueFromResourceString(resource.getString("gdrive.projectId"));
+
+        GoogleClientSecrets.Details details = new GoogleClientSecrets.Details()
+                .setAuthUri(authUri)
+                .setRedirectUris(Arrays.asList(redirectUri))
+                .setTokenUri(tokenUri)
+                .setClientId(clientId)
+                .setClientSecret(clientSecret);
+
+        clientSecrets = new GoogleClientSecrets()
+                .setInstalled(details);
+
+        try {
+            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            flow = new GoogleAuthorizationCodeFlow.Builder(
+                    httpTransport, jsonFactory, clientSecrets, SCOPES)
+                    .setAccessType(ACCESS_TYPE)
+                    .setApprovalPrompt(APPROVAL_PROMPT)
+                    .build();
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public GDriveConfig(){}
+
+    public static GDriveConfig getInstance(){
+        //Overloading the constructor
+        return new GDriveConfig(false);
+    }
+
+    @PostConstruct
+    public void initialize() {
+        GoogleClientSecrets.Details details = new GoogleClientSecrets.Details()
+                .setAuthUri(authUri)
+                .setRedirectUris(Arrays.asList(redirectUri))
+                .setTokenUri(tokenUri)
+                .setClientId(clientId)
+                .setClientSecret(clientSecret);
+
+        clientSecrets = new GoogleClientSecrets()
+                .setInstalled(details);
+
+        try {
+            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            flow = new GoogleAuthorizationCodeFlow.Builder(
+                    httpTransport, jsonFactory, clientSecrets, SCOPES)
+                    .setApprovalPrompt(APPROVAL_PROMPT)
+                    .setAccessType(ACCESS_TYPE)
+                    .build();
+        } catch (IOException | GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static HttpRequestInitializer setHttpTimeout(final HttpRequestInitializer requestInitializer) {
+        return new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest httpRequest) {
+                try {
+                    requestInitializer.initialize(httpRequest);
+                    httpRequest.setConnectTimeout(3 * 60000);  // 3 minutes connect timeout
+                    httpRequest.setReadTimeout(3 * 60000);  // 3 minutes read timeout
+                } catch (IOException ioe) {
+                    logger.error("IOException occurred in GoogleDriveSession.setHttpTimeout()", ioe);
+                } catch (NullPointerException npe) {
+                    logger.error("IOException occurred in GoogleDriveSession.setHttpTimeout()", npe);
+                }
+            }
+        };
+    }
+
+}
