@@ -12,19 +12,19 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
-public class GDriveDrain implements Drain {
+public class GoogleDriveDrain implements Drain {
     private ByteArrayOutputStream chunk = new ByteArrayOutputStream();
     private long size = 0;
     private String resumableSessionURL;
 
-    private static final Logger logger = LoggerFactory.getLogger(GDriveDrain.class);
+    private static final Logger logger = LoggerFactory.getLogger(GoogleDriveDrain.class);
 
     private static final String UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable";
 
-    private GDriveDrain(){}
+    private GoogleDriveDrain(){}
 
-    public static GDriveDrain initialize(String token) throws Exception{
-        GDriveDrain driveDrain = new GDriveDrain();
+    public static GoogleDriveDrain initialize(String token) throws Exception{
+        GoogleDriveDrain driveDrain = new GoogleDriveDrain();
         try{
             URL url = new URL(UPLOAD_URL);
             HttpURLConnection request = (HttpURLConnection) url.openConnection();
